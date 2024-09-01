@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import "./App.css";
 
 async function fetchData(updater: (data: any) => void) {
-  const resp = await fetch("http://azure.howardchung.net:8081/api/stats");
+  // netlify functions proxies the original http data to https
+  const resp = await fetch(
+    "https://marsstats.netlify.app/.netlify/functions/stats"
+  );
   const data = await resp.json();
   updater(data.data.reverse());
 }
