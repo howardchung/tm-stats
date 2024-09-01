@@ -21,7 +21,7 @@ function App() {
   data.forEach((d: any) => {
     // TODO handle ties?
     const winner = d.players.find(
-      (p) => p.score === Math.max(...d.players.map((p) => p.score)),
+      (p: any) => p.score === Math.max(...d.players.map((p: any) => p.score))
     );
     if (winner.name === "Howard") {
       hWins += 1;
@@ -29,12 +29,12 @@ function App() {
     if (winner.name === "Yvonne") {
       yWins += 1;
     }
-    d.players.forEach((p) => {
+    d.players.forEach((p: any) => {
       corpCounts.set(p.corp, (corpCounts.get(p.corp) ?? 0) + 1);
       if (p.id === winner.id) {
         corpWins.set(p.corp, (corpWins.get(p.corp) ?? 0) + 1);
       }
-      p.cards.forEach((c) => {
+      p.cards.forEach((c: any) => {
         cardCounts.set(c, (cardCounts.get(c) ?? 0) + 1);
         if (p.id === winner.id) {
           cardWins.set(c, (cardWins.get(c) ?? 0) + 1);
@@ -43,10 +43,10 @@ function App() {
     });
   });
   const sortedCorps = Array.from(corpCounts.entries()).sort(
-    (a, b) => b[1] - a[1],
+    (a, b) => b[1] - a[1]
   );
   const sortedCards = Array.from(cardCounts.entries()).sort(
-    (a, b) => b[1] - a[1],
+    (a, b) => b[1] - a[1]
   );
   // console.log(data);
   return (
@@ -74,12 +74,14 @@ function App() {
           <td>Yvonne</td>
         </tr>
         {data.map((d: any) => {
-          const hscore = d.players.find((p) => p.name === "Howard").score;
-          const yscore = d.players.find((p) => p.name === "Yvonne").score;
+          const hscore = d.players.find((p: any) => p.name === "Howard").score;
+          const yscore = d.players.find((p: any) => p.name === "Yvonne").score;
           return (
             <tr>
               <td>{new Date(d.createdTimeMs).toLocaleString()}</td>
-              <td>{`${Math.floor(d.durationMs / 1000 / 60)}:${Math.floor(d.durationMs / 1000) % 60}`}</td>
+              <td>{`${Math.floor(d.durationMs / 1000 / 60)}:${
+                Math.floor(d.durationMs / 1000) % 60
+              }`}</td>
               <td>{d.map}</td>
               <td>{d.generations}</td>
               <td style={{ display: "flex" }}>
@@ -102,11 +104,13 @@ function App() {
                 </div>
               </td>
               <td
-                style={{ backgroundColor: hscore > yscore ? "red" : null }}
-              >{`${d.players.find((p) => p.name === "Howard").corp}`}</td>
+                style={{ backgroundColor: hscore > yscore ? "red" : "initial" }}
+              >{`${d.players.find((p: any) => p.name === "Howard").corp}`}</td>
               <td
-                style={{ backgroundColor: yscore > hscore ? "green" : null }}
-              >{`${d.players.find((p) => p.name === "Yvonne").corp}`}</td>
+                style={{
+                  backgroundColor: yscore > hscore ? "green" : "initial",
+                }}
+              >{`${d.players.find((p: any) => p.name === "Yvonne").corp}`}</td>
             </tr>
           );
         })}
