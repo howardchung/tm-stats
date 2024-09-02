@@ -7,6 +7,7 @@ import {
   Progress,
   Group,
   Text,
+  Grid,
 } from "@mantine/core";
 import "@mantine/core/styles.css";
 
@@ -75,49 +76,53 @@ function App() {
   // console.log(data);
   return (
     <MantineProvider defaultColorScheme="dark">
-      <div>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <Title order={3}>Howard</Title>
-
-          <div style={{ display: "flex", fontSize: 24, fontWeight: 700 }}>
-            <Title order={1} style={{ color: "red" }}>
-              {hWins}
-            </Title>
-            <Title order={1} style={{ margin: "0px 8px" }}>{`-`}</Title>
-            <Title order={1} style={{ color: "green" }}>
-              {yWins}
-            </Title>
+      <Grid>
+        <Grid.Col span={12}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <Title order={3}>Howard</Title>
+            <div style={{ display: "flex", fontSize: 24, fontWeight: 700 }}>
+              <Title order={1} style={{ color: "red" }}>
+                {hWins}
+              </Title>
+              <Title order={1} style={{ margin: "0px 8px" }}>{`-`}</Title>
+              <Title order={1} style={{ color: "green" }}>
+                {yWins}
+              </Title>
+            </div>
+            <Title order={3}>Yvonne</Title>
           </div>
-
-          <Title order={3}>Yvonne</Title>
-        </div>
-        <div>
-          <Group justify="space-between">
-            <Text fz="xs" c="red" fw={700}>
-              {((hWins / (hWins + yWins)) * 100).toFixed(0)}%
-            </Text>
-            <Text fz="xs" c="green" fw={700}>
-              {((yWins / (hWins + yWins)) * 100).toFixed(0)}%
-            </Text>
-          </Group>
-          <Progress.Root>
-            <Progress.Section
-              // className={classes.progressSection}
-              value={(hWins / (hWins + yWins)) * 100}
-              color="red"
-            />
-
-            <Progress.Section
-              // className={classes.progressSection}
-              value={(yWins / (hWins + yWins)) * 100}
-              color="green"
-            />
-          </Progress.Root>
-        </div>
-        <Divider />
-        <div style={{ display: "flex", gap: "16px" }}>
           <div>
-            <Title>Games</Title>
+            <Group justify="space-between">
+              <Text fz="xs" c="red" fw={700}>
+                {((hWins / (hWins + yWins)) * 100).toFixed(0)}%
+              </Text>
+              <Text fz="xs" c="green" fw={700}>
+                {((yWins / (hWins + yWins)) * 100).toFixed(0)}%
+              </Text>
+            </Group>
+            <Progress.Root>
+              <Progress.Section
+                // className={classes.progressSection}
+                value={(hWins / (hWins + yWins)) * 100}
+                color="red"
+              />
+
+              <Progress.Section
+                // className={classes.progressSection}
+                value={(yWins / (hWins + yWins)) * 100}
+                color="green"
+              />
+            </Progress.Root>
+          </div>
+        </Grid.Col>
+        <Grid.Col span={{ lg: 6, base: 12 }}>
+          <Title>Games</Title>
+          <div className="mobileScroll">
             <Table>
               <Table.Tr>
                 <Table.Td>Time</Table.Td>
@@ -179,8 +184,10 @@ function App() {
               })}
             </Table>
           </div>
-          <div>
-            <Title>Corps</Title>
+        </Grid.Col>
+        <Grid.Col span={{ lg: 3, base: 12 }}>
+          <Title>Corps</Title>
+          <div className="mobileScroll">
             <Table>
               <Table.Tr>
                 <Table.Td>Name</Table.Td>
@@ -200,8 +207,10 @@ function App() {
               ))}
             </Table>
           </div>
-          <div>
-            <Title>Cards</Title>
+        </Grid.Col>
+        <Grid.Col span={{ lg: 3, base: 12 }}>
+          <Title>Cards</Title>
+          <div className="mobileScroll">
             <Table>
               <Table.Tr>
                 <Table.Td>Name</Table.Td>
@@ -227,9 +236,9 @@ function App() {
               ))}
             </Table>
           </div>
-          {/* <pre>{JSON.stringify(data)}</pre> */}
-        </div>
-      </div>
+        </Grid.Col>
+        {/* <pre>{JSON.stringify(data)}</pre> */}
+      </Grid>
     </MantineProvider>
   );
 }
