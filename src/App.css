@@ -47,3 +47,11 @@
     overflow-x: scroll;
   }
 }
+
+.progressSection1 {
+  margin-right: 1px;
+}
+
+.progressSection2 {
+  margin-left: 1px;
+}

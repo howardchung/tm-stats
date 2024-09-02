@@ -32,6 +32,10 @@ function App() {
   const cardCounts = new Map();
   const cardWins = new Map();
   const cardGens = new Map();
+  const hCards = new Map();
+  const yCards = new Map();
+  const hCorps = new Map();
+  const yCorps = new Map();
   let hWins = 0;
   let yWins = 0;
   data.forEach((d: any) => {
@@ -51,11 +55,23 @@ function App() {
       if (p.id === winner.id) {
         corpWins.set(p.corp, (corpWins.get(p.corp) ?? 0) + 1);
       }
+      if (p.name.trim() === "Howard") {
+        hCorps.set(p.corp, (hCorps.get(p.corp) ?? 0) + 1);
+      }
+      if (p.name.trim() === "Yvonne") {
+        yCorps.set(p.corp, (yCorps.get(p.corp) ?? 0) + 1);
+      }
       p.cards.forEach((c: any) => {
         cardCounts.set(c, (cardCounts.get(c) ?? 0) + 1);
         cardGens.set(c, (cardGens.get(c) ?? 0) + d.generations);
         if (p.id === winner.id) {
           cardWins.set(c, (cardWins.get(c) ?? 0) + 1);
+        }
+        if (p.name.trim() === "Howard") {
+          hCards.set(c, (hCards.get(c) ?? 0) + 1);
+        }
+        if (p.name.trim() === "Yvonne") {
+          yCards.set(c, (yCards.get(c) ?? 0) + 1);
         }
       });
     });
@@ -150,13 +166,7 @@ function App() {
                       <Table.Td>{d.generations}</Table.Td>
                       <Table.Td>
                         <div style={{ display: "flex" }}>
-                          <Text color="red" fw={hscore > yscore ? 700 : 400}>
-                            {hscore}
-                          </Text>
-                          <Text>{` - `}</Text>
-                          <Text color="green" fw={yscore > hscore ? 700 : 400}>
-                            {yscore}
-                          </Text>
+                          <SplitBar a={hscore} b={yscore} />
                         </div>
                       </Table.Td>
                       <Table.Td
@@ -198,7 +208,11 @@ function App() {
               <Table.Tbody>
                 {sortedCorps.map(([k, v]) => (
                   <Table.Tr key={k}>
-                    <Table.Td>{k}</Table.Td>
+                    <Table.Td>
+                      {" "}
+                      {k}
+                      <SplitBar a={hCorps.get(k) ?? 0} b={yCorps.get(k) ?? 0} />
+                    </Table.Td>
                     <Table.Td>{v}</Table.Td>
                     <Table.Td>
                       <PercentBar value={((corpWins.get(k) ?? 0) / v) * 100} />
@@ -220,7 +234,6 @@ function App() {
                 <Table.Tr>
                   <Table.Td>Name</Table.Td>
                   <Table.Td>Played</Table.Td>
-                  <Table.Td>Play%</Table.Td>
                   <Table.Td>Win%</Table.Td>
                   <Table.Td>Avg.Gens</Table.Td>
                 </Table.Tr>
@@ -228,13 +241,16 @@ function App() {
               <Table.Tbody>
                 {sortedCards.map(([k, v]) => (
                   <Table.Tr key={k}>
-                    <Table.Td>{k}</Table.Td>
-                    <Table.Td>{v}</Table.Td>
                     <Table.Td>
-                      <PercentBar
-                        value={(cardCounts.get(k) / data.length) * 100}
-                      />
+                      <div>
+                        {k}
+                        <SplitBar
+                          a={hCards.get(k) ?? 0}
+                          b={yCards.get(k) ?? 0}
+                        />
+                      </div>
                     </Table.Td>
+                    <Table.Td>{v}</Table.Td>
                     <Table.Td>
                       <PercentBar value={((cardWins.get(k) ?? 0) / v) * 100} />
                     </Table.Td>
@@ -262,10 +278,33 @@ function PercentBar({ value }: { value: number }) {
         </Text>
       </Group>
       <Progress.Root>
+        <Progress.Section value={value} color={value > 50 ? "green" : "red"} />
+      </Progress.Root>
+    </div>
+  );
+}
+
+function SplitBar({ a, b }: { a: number; b: number }) {
+  return (
+    <div style={{ width: "100%" }}>
+      <Group justify="space-between" wrap={"nowrap"}>
+        <Text fz="xs" c={"red"} fw={700}>
+          {a}
+        </Text>
+        <Text fz="xs" c={"green"} fw={700}>
+          {b}
+        </Text>
+      </Group>
+      <Progress.Root>
         <Progress.Section
-          // className={classes.progressSection}
-          value={value}
-          color={value > 50 ? "green" : "red"}
+          className="progressSection1"
+          value={(a / (a + b)) * 100}
+          color={"red"}
+        />
+        <Progress.Section
+          className="progressSection2"
+          value={(b / (a + b)) * 100}
+          color={"green"}
         />
       </Progress.Root>
     </div>
