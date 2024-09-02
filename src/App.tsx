@@ -3,7 +3,6 @@ import {
   MantineProvider,
   Table,
   Title,
-  Divider,
   Progress,
   Group,
   Text,
@@ -18,14 +17,8 @@ async function fetchData(updater: (data: any) => void) {
   const resp = await fetch(
     "https://marsstats.netlify.app/.netlify/functions/stats"
   );
-  const hist = await fetch("./oldgames.json");
   const data = await resp.json();
-  const histdata = await hist.json();
-  updater(
-    [...data.data, ...histdata].sort(
-      (a, b) => b.createdTimeMs - a.createdTimeMs
-    )
-  );
+  updater([...data.data]);
 }
 
 function App() {
@@ -124,64 +117,69 @@ function App() {
           <Title>Games</Title>
           <div className="mobileScroll">
             <Table>
-              <Table.Tr>
-                <Table.Td>Time</Table.Td>
-                <Table.Td>Duration</Table.Td>
-                <Table.Td>Map</Table.Td>
-                <Table.Td>Gens</Table.Td>
-                <Table.Td>Result</Table.Td>
-                <Table.Td>Howard</Table.Td>
-                <Table.Td>Yvonne</Table.Td>
-              </Table.Tr>
-              {data.map((d: any) => {
-                const hscore = d.players.find(
-                  (p: any) => p.name.trim() === "Howard"
-                )?.score;
-                const yscore = d.players.find(
-                  (p: any) => p.name.trim() === "Yvonne"
-                )?.score;
-                return (
-                  <Table.Tr>
-                    <Table.Td>
-                      {new Date(d.createdTimeMs).toLocaleString()}
-                    </Table.Td>
-                    <Table.Td>{`${Math.floor(d.durationMs / 1000 / 60)}:${(
-                      Math.floor(d.durationMs / 1000) % 60
-                    )
-                      .toString()
-                      .padStart(2, "0")}`}</Table.Td>
-                    <Table.Td>{d.map}</Table.Td>
-                    <Table.Td>{d.generations}</Table.Td>
-                    <Table.Td>
-                      <div style={{ display: "flex" }}>
-                        <Text color="red" fw={hscore > yscore ? 700 : 400}>
-                          {hscore}
-                        </Text>
-                        <Text>{` - `}</Text>
-                        <Text color="green" fw={yscore > hscore ? 700 : 400}>
-                          {yscore}
-                        </Text>
-                      </div>
-                    </Table.Td>
-                    <Table.Td
-                      style={{
-                        backgroundColor: hscore > yscore ? "red" : "initial",
-                      }}
-                    >{`${
-                      d.players.find((p: any) => p.name.trim() === "Howard")
-                        ?.corp
-                    }`}</Table.Td>
-                    <Table.Td
-                      style={{
-                        backgroundColor: yscore > hscore ? "green" : "initial",
-                      }}
-                    >{`${
-                      d.players.find((p: any) => p.name.trim() === "Yvonne")
-                        ?.corp
-                    }`}</Table.Td>
-                  </Table.Tr>
-                );
-              })}
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Td>Time</Table.Td>
+                  <Table.Td>Duration</Table.Td>
+                  <Table.Td>Map</Table.Td>
+                  <Table.Td>Gens</Table.Td>
+                  <Table.Td>Result</Table.Td>
+                  <Table.Td>Howard</Table.Td>
+                  <Table.Td>Yvonne</Table.Td>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {data.map((d: any) => {
+                  const hscore = d.players.find(
+                    (p: any) => p.name.trim() === "Howard"
+                  )?.score;
+                  const yscore = d.players.find(
+                    (p: any) => p.name.trim() === "Yvonne"
+                  )?.score;
+                  return (
+                    <Table.Tr key={d.createdTimeMs}>
+                      <Table.Td>
+                        {new Date(d.createdTimeMs).toLocaleString()}
+                      </Table.Td>
+                      <Table.Td>{`${Math.floor(d.durationMs / 1000 / 60)}:${(
+                        Math.floor(d.durationMs / 1000) % 60
+                      )
+                        .toString()
+                        .padStart(2, "0")}`}</Table.Td>
+                      <Table.Td>{d.map}</Table.Td>
+                      <Table.Td>{d.generations}</Table.Td>
+                      <Table.Td>
+                        <div style={{ display: "flex" }}>
+                          <Text color="red" fw={hscore > yscore ? 700 : 400}>
+                            {hscore}
+                          </Text>
+                          <Text>{` - `}</Text>
+                          <Text color="green" fw={yscore > hscore ? 700 : 400}>
+                            {yscore}
+                          </Text>
+                        </div>
+                      </Table.Td>
+                      <Table.Td
+                        style={{
+                          backgroundColor: hscore > yscore ? "red" : "initial",
+                        }}
+                      >{`${
+                        d.players.find((p: any) => p.name.trim() === "Howard")
+                          ?.corp
+                      }`}</Table.Td>
+                      <Table.Td
+                        style={{
+                          backgroundColor:
+                            yscore > hscore ? "green" : "initial",
+                        }}
+                      >{`${
+                        d.players.find((p: any) => p.name.trim() === "Yvonne")
+                          ?.corp
+                      }`}</Table.Td>
+                    </Table.Tr>
+                  );
+                })}
+              </Table.Tbody>
             </Table>
           </div>
         </Grid.Col>
@@ -189,22 +187,28 @@ function App() {
           <Title>Corps</Title>
           <div className="mobileScroll">
             <Table>
-              <Table.Tr>
-                <Table.Td>Name</Table.Td>
-                <Table.Td>Played</Table.Td>
-                <Table.Td>Win%</Table.Td>
-                <Table.Td>Avg.Gens</Table.Td>
-              </Table.Tr>
-              {sortedCorps.map(([k, v]) => (
+              <Table.Thead>
                 <Table.Tr>
-                  <Table.Td>{k}</Table.Td>
-                  <Table.Td>{v}</Table.Td>
-                  <Table.Td>
-                    <PercentBar value={((corpWins.get(k) ?? 0) / v) * 100} />
-                  </Table.Td>
-                  <Table.Td>{((corpGens.get(k) ?? 0) / v).toFixed(2)}</Table.Td>
+                  <Table.Td>Name</Table.Td>
+                  <Table.Td>Played</Table.Td>
+                  <Table.Td>Win%</Table.Td>
+                  <Table.Td>Avg.Gens</Table.Td>
                 </Table.Tr>
-              ))}
+              </Table.Thead>
+              <Table.Tbody>
+                {sortedCorps.map(([k, v]) => (
+                  <Table.Tr key={k}>
+                    <Table.Td>{k}</Table.Td>
+                    <Table.Td>{v}</Table.Td>
+                    <Table.Td>
+                      <PercentBar value={((corpWins.get(k) ?? 0) / v) * 100} />
+                    </Table.Td>
+                    <Table.Td>
+                      {((corpGens.get(k) ?? 0) / v).toFixed(2)}
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
             </Table>
           </div>
         </Grid.Col>
@@ -212,28 +216,34 @@ function App() {
           <Title>Cards</Title>
           <div className="mobileScroll">
             <Table>
-              <Table.Tr>
-                <Table.Td>Name</Table.Td>
-                <Table.Td>Played</Table.Td>
-                <Table.Td>Play%</Table.Td>
-                <Table.Td>Win%</Table.Td>
-                <Table.Td>Avg.Gens</Table.Td>
-              </Table.Tr>
-              {sortedCards.map(([k, v]) => (
+              <Table.Thead>
                 <Table.Tr>
-                  <Table.Td>{k}</Table.Td>
-                  <Table.Td>{v}</Table.Td>
-                  <Table.Td>
-                    <PercentBar
-                      value={(cardCounts.get(k) / data.length) * 100}
-                    />
-                  </Table.Td>
-                  <Table.Td>
-                    <PercentBar value={((cardWins.get(k) ?? 0) / v) * 100} />
-                  </Table.Td>
-                  <Table.Td>{((cardGens.get(k) ?? 0) / v).toFixed(2)}</Table.Td>
+                  <Table.Td>Name</Table.Td>
+                  <Table.Td>Played</Table.Td>
+                  <Table.Td>Play%</Table.Td>
+                  <Table.Td>Win%</Table.Td>
+                  <Table.Td>Avg.Gens</Table.Td>
                 </Table.Tr>
-              ))}
+              </Table.Thead>
+              <Table.Tbody>
+                {sortedCards.map(([k, v]) => (
+                  <Table.Tr key={k}>
+                    <Table.Td>{k}</Table.Td>
+                    <Table.Td>{v}</Table.Td>
+                    <Table.Td>
+                      <PercentBar
+                        value={(cardCounts.get(k) / data.length) * 100}
+                      />
+                    </Table.Td>
+                    <Table.Td>
+                      <PercentBar value={((cardWins.get(k) ?? 0) / v) * 100} />
+                    </Table.Td>
+                    <Table.Td>
+                      {((cardGens.get(k) ?? 0) / v).toFixed(2)}
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
             </Table>
           </div>
         </Grid.Col>
