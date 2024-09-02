@@ -17,8 +17,14 @@ async function fetchData(updater: (data: any) => void) {
   const resp = await fetch(
     "https://marsstats.netlify.app/.netlify/functions/stats"
   );
+  const hist = await fetch("./oldgames.json");
   const data = await resp.json();
-  updater(data.data.reverse());
+  const histdata = await hist.json();
+  updater(
+    [...data.data, ...histdata].sort(
+      (a, b) => b.createdTimeMs - a.createdTimeMs
+    )
+  );
 }
 
 function App() {
@@ -39,10 +45,10 @@ function App() {
     const winner = d.players.find(
       (p: any) => p.score === Math.max(...d.players.map((p: any) => p.score))
     );
-    if (winner.name === "Howard") {
+    if (winner.name.trim() === "Howard") {
       hWins += 1;
     }
-    if (winner.name === "Yvonne") {
+    if (winner.name.trim() === "Yvonne") {
       yWins += 1;
     }
     d.players.forEach((p: any) => {
@@ -124,19 +130,21 @@ function App() {
               </Table.Tr>
               {data.map((d: any) => {
                 const hscore = d.players.find(
-                  (p: any) => p.name === "Howard"
-                ).score;
+                  (p: any) => p.name.trim() === "Howard"
+                )?.score;
                 const yscore = d.players.find(
-                  (p: any) => p.name === "Yvonne"
-                ).score;
+                  (p: any) => p.name.trim() === "Yvonne"
+                )?.score;
                 return (
                   <Table.Tr>
                     <Table.Td>
                       {new Date(d.createdTimeMs).toLocaleString()}
                     </Table.Td>
-                    <Table.Td>{`${Math.floor(d.durationMs / 1000 / 60)}:${
+                    <Table.Td>{`${Math.floor(d.durationMs / 1000 / 60)}:${(
                       Math.floor(d.durationMs / 1000) % 60
-                    }`}</Table.Td>
+                    )
+                      .toString()
+                      .padStart(2, "0")}`}</Table.Td>
                     <Table.Td>{d.map}</Table.Td>
                     <Table.Td>{d.generations}</Table.Td>
                     <Table.Td>
@@ -155,14 +163,16 @@ function App() {
                         backgroundColor: hscore > yscore ? "red" : "initial",
                       }}
                     >{`${
-                      d.players.find((p: any) => p.name === "Howard").corp
+                      d.players.find((p: any) => p.name.trim() === "Howard")
+                        ?.corp
                     }`}</Table.Td>
                     <Table.Td
                       style={{
                         backgroundColor: yscore > hscore ? "green" : "initial",
                       }}
                     >{`${
-                      d.players.find((p: any) => p.name === "Yvonne").corp
+                      d.players.find((p: any) => p.name.trim() === "Yvonne")
+                        ?.corp
                     }`}</Table.Td>
                   </Table.Tr>
                 );
@@ -185,7 +195,7 @@ function App() {
                   <Table.Td>
                     <PercentBar value={((corpWins.get(k) ?? 0) / v) * 100} />
                   </Table.Td>
-                  <Table.Td>{(corpGens.get(k) ?? 0 / v).toFixed(2)}</Table.Td>
+                  <Table.Td>{((corpGens.get(k) ?? 0) / v).toFixed(2)}</Table.Td>
                 </Table.Tr>
               ))}
             </Table>
@@ -206,7 +216,7 @@ function App() {
                   <Table.Td>{v}</Table.Td>
                   <Table.Td>
                     <PercentBar
-                      value={((cardWins.get(k) ?? 0) / data.length) * 100}
+                      value={(cardCounts.get(k) / data.length) * 100}
                     />
                   </Table.Td>
                   <Table.Td>
