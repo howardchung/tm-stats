@@ -76,11 +76,48 @@ function App() {
       });
     });
   });
+  const [gameSortKey, setGameSortKey] = useState<string>("");
+  let gameSortFn = (a: any) => a["createdTimeMs"];
+  switch (gameSortKey) {
+    case "createdTimeMs":
+    case "durationMs":
+    case "map":
+    case "generations":
+      gameSortFn = (a: any) => a[gameSortKey];
+      break;
+  }
+  const sortedGames = data.sort((a, b) => gameSortFn(b) - gameSortFn(a));
+  const [corpSortKey, setCorpSortKey] = useState<string>("");
+  let corpSortFn = (a: any) => a[1];
+  switch (corpSortKey) {
+    case "played":
+      corpSortFn = ([_k, v]) => v;
+      break;
+    case "win":
+      corpSortFn = ([k, v]) => (corpWins.get(k) ?? 0) / v;
+      break;
+    case "avggen":
+      corpSortFn = ([k, v]) => (corpGens.get(k) ?? 0) / v;
+      break;
+  }
   const sortedCorps = Array.from(corpCounts.entries()).sort(
-    (a, b) => b[1] - a[1]
+    (a, b) => corpSortFn(b) - corpSortFn(a)
   );
+  const [cardSortKey, setCardSortKey] = useState<string>("");
+  let cardSortFn = (a: any) => a[1];
+  switch (cardSortKey) {
+    case "played":
+      cardSortFn = ([_k, v]) => v;
+      break;
+    case "win":
+      cardSortFn = ([k, v]) => (cardWins.get(k) ?? 0) / v;
+      break;
+    case "avggen":
+      cardSortFn = ([k, v]) => (cardGens.get(k) ?? 0) / v;
+      break;
+  }
   const sortedCards = Array.from(cardCounts.entries()).sort(
-    (a, b) => b[1] - a[1]
+    (a, b) => cardSortFn(b) - cardSortFn(a)
   );
   // console.log(data);
   return (
@@ -135,17 +172,23 @@ function App() {
             <Table>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Td>Time</Table.Td>
-                  <Table.Td>Duration</Table.Td>
-                  <Table.Td>Map</Table.Td>
-                  <Table.Td>Gens</Table.Td>
-                  <Table.Td>Result</Table.Td>
-                  <Table.Td>Howard</Table.Td>
-                  <Table.Td>Yvonne</Table.Td>
+                  <Table.Th onClick={() => setGameSortKey("createdTimeMs")}>
+                    Time
+                  </Table.Th>
+                  <Table.Th onClick={() => setGameSortKey("durationMs")}>
+                    Duration
+                  </Table.Th>
+                  <Table.Th>Map</Table.Th>
+                  <Table.Th onClick={() => setGameSortKey("generations")}>
+                    Gens
+                  </Table.Th>
+                  <Table.Th>Result</Table.Th>
+                  <Table.Th>Howard</Table.Th>
+                  <Table.Th>Yvonne</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {data.map((d: any) => {
+                {sortedGames.map((d: any) => {
                   const hscore = d.players.find(
                     (p: any) => p.name.trim() === "Howard"
                   )?.score;
@@ -199,10 +242,16 @@ function App() {
             <Table>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Td>Name</Table.Td>
-                  <Table.Td>Played</Table.Td>
-                  <Table.Td>Win%</Table.Td>
-                  <Table.Td>Avg.Gens</Table.Td>
+                  <Table.Th>Name</Table.Th>
+                  <Table.Th onClick={() => setCorpSortKey("played")}>
+                    Played
+                  </Table.Th>
+                  <Table.Th onClick={() => setCorpSortKey("win")}>
+                    Win%
+                  </Table.Th>
+                  <Table.Th onClick={() => setCorpSortKey("avggen")}>
+                    Avg.Gens
+                  </Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -232,10 +281,16 @@ function App() {
             <Table>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Td>Name</Table.Td>
-                  <Table.Td>Played</Table.Td>
-                  <Table.Td>Win%</Table.Td>
-                  <Table.Td>Avg.Gens</Table.Td>
+                  <Table.Th>Name</Table.Th>
+                  <Table.Th onClick={() => setCardSortKey("played")}>
+                    Played
+                  </Table.Th>
+                  <Table.Th onClick={() => setCardSortKey("win")}>
+                    Win%
+                  </Table.Th>
+                  <Table.Th onClick={() => setCardSortKey("avggen")}>
+                    Avg.Gens
+                  </Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
