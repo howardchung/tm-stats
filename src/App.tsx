@@ -198,7 +198,11 @@ function App() {
                   return (
                     <Table.Tr key={d.createdTimeMs}>
                       <Table.Td>
-                        {new Date(d.createdTimeMs).toLocaleString()}
+                        <a
+                          href={`http://azure.howardchung.net:8081/game?id=${d.gameId}`}
+                        >
+                          {new Date(d.createdTimeMs).toLocaleString()}
+                        </a>
                       </Table.Td>
                       <Table.Td>{`${Math.floor(d.durationMs / 1000 / 60)}:${(
                         Math.floor(d.durationMs / 1000) % 60
