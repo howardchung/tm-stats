@@ -39,20 +39,16 @@ function App() {
   let hWins = 0;
   let yWins = 0;
   data.forEach((d: any) => {
-    // TODO handle ties?
-    const winner = d.players.find(
-      (p: any) => p.score === Math.max(...d.players.map((p: any) => p.score))
-    );
-    if (winner.name.trim() === "Howard") {
+    if (d.players[d.winner].name.trim() === "Howard") {
       hWins += 1;
     }
-    if (winner.name.trim() === "Yvonne") {
+    if (d.players[d.winner].name.trim() === "Yvonne") {
       yWins += 1;
     }
     d.players.forEach((p: any) => {
       corpCounts.set(p.corp, (corpCounts.get(p.corp) ?? 0) + 1);
       corpGens.set(p.corp, (corpGens.get(p.corp) ?? 0) + d.generations);
-      if (p.id === winner.id) {
+      if (p.id === d.players[d.winner].id) {
         corpWins.set(p.corp, (corpWins.get(p.corp) ?? 0) + 1);
       }
       if (p.name.trim() === "Howard") {
@@ -64,7 +60,7 @@ function App() {
       p.cards.forEach((c: any) => {
         cardCounts.set(c, (cardCounts.get(c) ?? 0) + 1);
         cardGens.set(c, (cardGens.get(c) ?? 0) + d.generations);
-        if (p.id === winner.id) {
+        if (p.id === d.players[d.winner].id) {
           cardWins.set(c, (cardWins.get(c) ?? 0) + 1);
         }
         if (p.name.trim() === "Howard") {
@@ -218,21 +214,20 @@ function App() {
                       </Table.Td>
                       <Table.Td
                         style={{
-                          backgroundColor: hscore > yscore ? "red" : "initial",
+                          backgroundColor:
+                            d.players[d.winner]?.name === "Howard"
+                              ? "red"
+                              : "initial",
                         }}
-                      >{`${
-                        d.players.find((p: any) => p.name.trim() === "Howard")
-                          ?.corp
-                      }`}</Table.Td>
+                      >{`${d.players[0]?.corp}`}</Table.Td>
                       <Table.Td
                         style={{
                           backgroundColor:
-                            yscore > hscore ? "green" : "initial",
+                            d.players[d.winner]?.name === "Yvonne"
+                              ? "green"
+                              : "initial",
                         }}
-                      >{`${
-                        d.players.find((p: any) => p.name.trim() === "Yvonne")
-                          ?.corp
-                      }`}</Table.Td>
+                      >{`${d.players[1]?.corp}`}</Table.Td>
                     </Table.Tr>
                   );
                 })}
