@@ -225,12 +225,13 @@ function App() {
                       <Table.Td
                         style={{
                           backgroundColor:
-                            d.players.find((p: any) => p.name === "Yvonne")
-                              ?.name === "Yvonne"
+                            d.players[d.winner]?.name === "Yvonne"
                               ? "green"
                               : "initial",
                         }}
-                      >{`${d.players[1]?.corp}`}</Table.Td>
+                      >{`${
+                        d.players.find((p: any) => p.name === "Yvonne")?.corp
+                      }`}</Table.Td>
                     </Table.Tr>
                   );
                 })}
