@@ -85,7 +85,7 @@ function App() {
   let corpSortFn = (a: any) => a[1];
   switch (corpSortKey) {
     case "played":
-      corpSortFn = ([k, v]) => v;
+      corpSortFn = ([_k, v]) => v;
       break;
     case "win":
       corpSortFn = ([k, v]) => (corpWins.get(k) ?? 0) / v;
@@ -101,7 +101,7 @@ function App() {
   let cardSortFn = (a: any) => a[1];
   switch (cardSortKey) {
     case "played":
-      cardSortFn = ([k, v]) => v;
+      cardSortFn = ([_k, v]) => v;
       break;
     case "win":
       cardSortFn = ([k, v]) => (cardWins.get(k) ?? 0) / v;
@@ -334,7 +334,6 @@ function App() {
                           values={players.map(
                             (p) => pCards.get(p)?.get(k) ?? 0
                           )}
-                          s
                         />
                       </div>
                     </Table.Td>
