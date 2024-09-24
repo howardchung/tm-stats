@@ -1,5 +1,4 @@
 #root {
-  max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
@@ -54,4 +53,7 @@
 
 .progressSection2 {
   margin-left: 1px;
+}
+
+.label {
 }

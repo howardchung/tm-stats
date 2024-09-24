@@ -21,41 +21,41 @@ async function fetchData(updater: (data: any) => void) {
   updater([...data.data]);
 }
 
+const players = ["Howard", "Yvonne", "Aredy"];
+const colors = ["red", "green", "yellow"];
+
 function App() {
   const [data, setData] = useState([]);
   useEffect(() => {
     fetchData(setData);
   }, []);
+
   const corpCounts = new Map();
   const corpWins = new Map();
   const corpGens = new Map();
   const cardCounts = new Map();
   const cardWins = new Map();
   const cardGens = new Map();
-  const hCards = new Map();
-  const yCards = new Map();
-  const hCorps = new Map();
-  const yCorps = new Map();
-  let hWins = 0;
-  let yWins = 0;
+  const pCards = new Map<string, Map<string, number>>();
+  const pCorps = new Map<string, Map<string, number>>();
+  players.forEach((p) => {
+    pCards.set(p, new Map());
+    pCorps.set(p, new Map());
+  });
+  const pWins = new Map<string, number>();
   data.forEach((d: any) => {
-    if (d.players[d.winner].name.trim() === "Howard") {
-      hWins += 1;
-    }
-    if (d.players[d.winner].name.trim() === "Yvonne") {
-      yWins += 1;
-    }
+    const winnerName = d.players[d.winner].name.trim();
+    pWins.set(winnerName, (pWins.get(winnerName) ?? 0) + 1);
     d.players.forEach((p: any) => {
       corpCounts.set(p.corp, (corpCounts.get(p.corp) ?? 0) + 1);
       corpGens.set(p.corp, (corpGens.get(p.corp) ?? 0) + d.generations);
       if (p.id === d.players[d.winner].id) {
         corpWins.set(p.corp, (corpWins.get(p.corp) ?? 0) + 1);
       }
-      if (p.name.trim() === "Howard") {
-        hCorps.set(p.corp, (hCorps.get(p.corp) ?? 0) + 1);
-      }
-      if (p.name.trim() === "Yvonne") {
-        yCorps.set(p.corp, (yCorps.get(p.corp) ?? 0) + 1);
+      const pName = p.name.trim();
+      const target = pCorps.get(pName);
+      if (target) {
+        target.set(p.corp, (target.get(p.corp) ?? 0) + 1);
       }
       p.cards.forEach((c: any) => {
         cardCounts.set(c, (cardCounts.get(c) ?? 0) + 1);
@@ -63,11 +63,9 @@ function App() {
         if (p.id === d.players[d.winner].id) {
           cardWins.set(c, (cardWins.get(c) ?? 0) + 1);
         }
-        if (p.name.trim() === "Howard") {
-          hCards.set(c, (hCards.get(c) ?? 0) + 1);
-        }
-        if (p.name.trim() === "Yvonne") {
-          yCards.set(c, (yCards.get(c) ?? 0) + 1);
+        const target = pCards.get(pName);
+        if (target) {
+          target.set(c, (target.get(c) ?? 0) + 1);
         }
       });
     });
@@ -87,7 +85,7 @@ function App() {
   let corpSortFn = (a: any) => a[1];
   switch (corpSortKey) {
     case "played":
-      corpSortFn = ([_k, v]) => v;
+      corpSortFn = ([k, v]) => v;
       break;
     case "win":
       corpSortFn = ([k, v]) => (corpWins.get(k) ?? 0) / v;
@@ -103,7 +101,7 @@ function App() {
   let cardSortFn = (a: any) => a[1];
   switch (cardSortKey) {
     case "played":
-      cardSortFn = ([_k, v]) => v;
+      cardSortFn = ([k, v]) => v;
       break;
     case "win":
       cardSortFn = ([k, v]) => (cardWins.get(k) ?? 0) / v;
@@ -123,42 +121,43 @@ function App() {
           <div
             style={{
               display: "flex",
+              fontSize: 24,
+              fontWeight: 700,
               justifyContent: "space-between",
             }}
           >
-            <Title order={3}>Howard</Title>
-            <div style={{ display: "flex", fontSize: 24, fontWeight: 700 }}>
-              <Title order={1} style={{ color: "red" }}>
-                {hWins}
-              </Title>
-              <Title order={1} style={{ margin: "0px 8px" }}>{`-`}</Title>
-              <Title order={1} style={{ color: "green" }}>
-                {yWins}
-              </Title>
-            </div>
-            <Title order={3}>Yvonne</Title>
+            {players.map((p, i) => {
+              return (
+                <div>
+                  <Title order={3}>{p}</Title>
+                  <Title order={1} style={{ color: colors[i] }}>
+                    {pWins.get(p) ?? 0}
+                  </Title>
+                  {/* {i < players.length - 1 ? <Title order={1} style={{ margin: "0px 8px" }}>{`-`}</Title> : null} */}
+                </div>
+              );
+            })}
           </div>
           <div>
-            <Group justify="space-between">
-              <Text fz="xs" c="red" fw={700}>
-                {((hWins / (hWins + yWins)) * 100).toFixed(0)}%
-              </Text>
-              <Text fz="xs" c="green" fw={700}>
-                {((yWins / (hWins + yWins)) * 100).toFixed(0)}%
-              </Text>
-            </Group>
-            <Progress.Root>
-              <Progress.Section
-                // className={classes.progressSection}
-                value={(hWins / (hWins + yWins)) * 100}
-                color="red"
-              />
+            {/* <Group>
+              {players.map((p, i) => {
+                return (
 
-              <Progress.Section
-                // className={classes.progressSection}
-                value={(yWins / (hWins + yWins)) * 100}
-                color="green"
-              />
+                );
+              })}
+            </Group> */}
+            <Progress.Root size={20}>
+              {players.map((p, i) => {
+                const pct = ((pWins.get(p) ?? 0) / sortedGames.length) * 100;
+                return (
+                  <Progress.Section
+                    value={((pWins.get(p) ?? 0) / sortedGames.length) * 100}
+                    color={colors[i]}
+                  >
+                    <Progress.Label>{pct.toFixed(0)}%</Progress.Label>
+                  </Progress.Section>
+                );
+              })}
             </Progress.Root>
           </div>
         </Grid.Col>
@@ -179,18 +178,15 @@ function App() {
                     Gens
                   </Table.Th>
                   <Table.Th>Result</Table.Th>
-                  <Table.Th>Howard</Table.Th>
-                  <Table.Th>Yvonne</Table.Th>
+                  {players.map((p, i) => (
+                    <Table.Th>
+                      <div style={{ color: colors[i] }}>{p}</div>
+                    </Table.Th>
+                  ))}
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
                 {sortedGames.map((d: any) => {
-                  const hscore = d.players.find(
-                    (p: any) => p.name.trim() === "Howard"
-                  )?.score;
-                  const yscore = d.players.find(
-                    (p: any) => p.name.trim() === "Yvonne"
-                  )?.score;
                   return (
                     <Table.Tr key={d.createdTimeMs}>
                       <Table.Td>
@@ -208,30 +204,60 @@ function App() {
                       <Table.Td>{d.map}</Table.Td>
                       <Table.Td>{d.generations}</Table.Td>
                       <Table.Td>
-                        <div style={{ display: "flex" }}>
-                          <SplitBar a={hscore} b={yscore} />
+                        <div
+                          style={{
+                            display: "flex",
+                            minWidth: "120px",
+                            position: "relative",
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: "absolute",
+                              width: "100%",
+                              margin: "0 auto",
+                              bottom: "10px",
+                            }}
+                          >
+                            ▼
+                          </div>
+                          <div
+                            style={{
+                              position: "absolute",
+                              width: "1px",
+                              height: "100%",
+                              left: "50%",
+                              zIndex: 1,
+                              backgroundColor: "white",
+                            }}
+                          ></div>
+                          <SplitBar
+                            values={players.map(
+                              (p) =>
+                                d.players.find(
+                                  (p2: any) => p2.name.trim() === p
+                                )?.score ?? 0
+                            )}
+                          />
                         </div>
                       </Table.Td>
-                      <Table.Td
-                        style={{
-                          backgroundColor:
-                            d.players[d.winner]?.name === "Howard"
-                              ? "red"
-                              : "initial",
-                        }}
-                      >{`${
-                        d.players.find((p: any) => p.name === "Howard")?.corp
-                      }`}</Table.Td>
-                      <Table.Td
-                        style={{
-                          backgroundColor:
-                            d.players[d.winner]?.name === "Yvonne"
-                              ? "green"
-                              : "initial",
-                        }}
-                      >{`${
-                        d.players.find((p: any) => p.name === "Yvonne")?.corp
-                      }`}</Table.Td>
+                      {players.map((p, i) => {
+                        return (
+                          <Table.Td
+                            style={{
+                              backgroundColor:
+                                d.players[d.winner]?.name === p
+                                  ? colors[i]
+                                  : "initial",
+                            }}
+                          >
+                            <Text size={"xs"}>{`${
+                              d.players.find((p2: any) => p2.name === p)
+                                ?.corp ?? ""
+                            }`}</Text>
+                          </Table.Td>
+                        );
+                      })}
                     </Table.Tr>
                   );
                 })}
@@ -263,7 +289,9 @@ function App() {
                     <Table.Td>
                       {" "}
                       {k}
-                      <SplitBar a={hCorps.get(k) ?? 0} b={yCorps.get(k) ?? 0} />
+                      <SplitBar
+                        values={players.map((p) => pCorps.get(p)?.get(k) ?? 0)}
+                      />
                     </Table.Td>
                     <Table.Td>{v}</Table.Td>
                     <Table.Td>
@@ -303,8 +331,10 @@ function App() {
                       <div>
                         {k}
                         <SplitBar
-                          a={hCards.get(k) ?? 0}
-                          b={yCards.get(k) ?? 0}
+                          values={players.map(
+                            (p) => pCards.get(p)?.get(k) ?? 0
+                          )}
+                          s
                         />
                       </div>
                     </Table.Td>
@@ -342,28 +372,21 @@ function PercentBar({ value }: { value: number }) {
   );
 }
 
-function SplitBar({ a, b }: { a: number; b: number }) {
+function SplitBar({ values }: { values: number[] }) {
+  const sum = values.reduce((a, b) => a + b, 0);
   return (
     <div style={{ width: "100%" }}>
-      <Group justify="space-between" wrap={"nowrap"}>
-        <Text fz="xs" c={"red"} fw={700}>
-          {a}
-        </Text>
-        <Text fz="xs" c={"green"} fw={700}>
-          {b}
-        </Text>
-      </Group>
-      <Progress.Root>
-        <Progress.Section
-          className="progressSection1"
-          value={(a / (a + b)) * 100}
-          color={"red"}
-        />
-        <Progress.Section
-          className="progressSection2"
-          value={(b / (a + b)) * 100}
-          color={"green"}
-        />
+      <Progress.Root size={14} classNames={{ label: "label" }}>
+        {values.map((v, i) => {
+          if (!v) {
+            return null;
+          }
+          return (
+            <Progress.Section value={(v / sum) * 100} color={colors[i]}>
+              <Progress.Label>{v}</Progress.Label>
+            </Progress.Section>
+          );
+        })}
       </Progress.Root>
     </div>
   );
