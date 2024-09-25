@@ -7,6 +7,7 @@ import {
   Group,
   Text,
   Grid,
+  Checkbox,
 } from "@mantine/core";
 import "@mantine/core/styles.css";
 
@@ -21,14 +22,27 @@ async function fetchData(updater: (data: any) => void) {
   updater([...data.data]);
 }
 
-const players = ["Howard", "Yvonne", "Aredy"];
-const colors = ["red", "green", "yellow"];
+const players = ["Howard", "Yvonne", "Aredy", "Sam"];
+const colors = ["red", "green", "yellow", "blue"];
 
 function App() {
   const [data, setData] = useState([]);
+  const [selectedPlayers, setSelectedPlayers] = useState<
+    Record<string, boolean>
+  >({});
   useEffect(() => {
     fetchData(setData);
   }, []);
+  console.log(selectedPlayers);
+  const filtered = data.filter((d: any) => {
+    const selectedArr = Object.keys(selectedPlayers).filter(
+      (p) => selectedPlayers[p]
+    );
+    const gPlayers = d.players.map((p2: any) => p2.name.trim());
+    return (
+      selectedArr.length === 0 || selectedArr.every((p) => gPlayers.includes(p))
+    );
+  });
 
   const corpCounts = new Map();
   const corpWins = new Map();
@@ -43,7 +57,7 @@ function App() {
     pCorps.set(p, new Map());
   });
   const pWins = new Map<string, number>();
-  data.forEach((d: any) => {
+  filtered.forEach((d: any) => {
     const winnerName = d.players[d.winner].name.trim();
     pWins.set(winnerName, (pWins.get(winnerName) ?? 0) + 1);
     d.players.forEach((p: any) => {
@@ -80,7 +94,7 @@ function App() {
       gameSortFn = (a: any) => a[gameSortKey];
       break;
   }
-  const sortedGames = data.sort((a, b) => gameSortFn(b) - gameSortFn(a));
+  const sortedGames = filtered.sort((a, b) => gameSortFn(b) - gameSortFn(a));
   const [corpSortKey, setCorpSortKey] = useState<string>("");
   let corpSortFn = (a: any) => a[1];
   switch (corpSortKey) {
@@ -128,8 +142,24 @@ function App() {
           >
             {players.map((p, i) => {
               return (
-                <div>
+                <div
+                  key={p}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
                   <Title order={3}>{p}</Title>
+                  <Checkbox
+                    value={Boolean(selectedPlayers[p]).toString()}
+                    onChange={(event: any) => {
+                      console.log(p, event.currentTarget.checked);
+                      const newSelectedPlayers = { ...selectedPlayers };
+                      newSelectedPlayers[p] = event.currentTarget.checked;
+                      setSelectedPlayers(newSelectedPlayers);
+                    }}
+                  />
                   <Title order={1} style={{ color: colors[i] }}>
                     {pWins.get(p) ?? 0}
                   </Title>
@@ -139,18 +169,12 @@ function App() {
             })}
           </div>
           <div>
-            {/* <Group>
-              {players.map((p, i) => {
-                return (
-
-                );
-              })}
-            </Group> */}
             <Progress.Root size={20}>
               {players.map((p, i) => {
                 const pct = ((pWins.get(p) ?? 0) / sortedGames.length) * 100;
                 return (
                   <Progress.Section
+                    key={p}
                     value={((pWins.get(p) ?? 0) / sortedGames.length) * 100}
                     color={colors[i]}
                   >
@@ -179,7 +203,7 @@ function App() {
                   </Table.Th>
                   <Table.Th>Result</Table.Th>
                   {players.map((p, i) => (
-                    <Table.Th>
+                    <Table.Th key={p}>
                       <div style={{ color: colors[i] }}>{p}</div>
                     </Table.Th>
                   ))}
@@ -244,6 +268,7 @@ function App() {
                       {players.map((p, i) => {
                         return (
                           <Table.Td
+                            key={p}
                             style={{
                               backgroundColor:
                                 d.players[d.winner]?.name === p
@@ -381,7 +406,7 @@ function SplitBar({ values }: { values: number[] }) {
             return null;
           }
           return (
-            <Progress.Section value={(v / sum) * 100} color={colors[i]}>
+            <Progress.Section key={i} value={(v / sum) * 100} color={colors[i]}>
               <Progress.Label>{v}</Progress.Label>
             </Progress.Section>
           );
