@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   MantineProvider,
   Table,
@@ -19,30 +19,100 @@ async function fetchData(updater: (data: any) => void) {
     "https://marsstats.netlify.app/.netlify/functions/stats"
   );
   const data = await resp.json();
-  updater([...data.data]);
+  updater({ games: data.data, eloRatings: computeElo(data.data) });
 }
 
 const players = ["Howard", "Yvonne", "Aredy", "Sam"];
 const colors = ["red", "green", "yellow", "blue"];
 
+function computeElo(games: any[]) {
+  const result = new Map<string, number>();
+  const init = 1000;
+  // each match can update by up to k
+  const k = 32;
+  games
+    .reverse()
+    //.slice(0, 2)
+    .forEach((g) => {
+      const deltas = new Map<string, number>();
+      // Iterate over all games
+      // If more than 2 players, divide k by (players - 1)
+      const adjustedK = k / (g.players.length - 1);
+      // Get all pairs and resullt
+      const pairs: [string, string, number][] = [];
+      for (let i = 0; i < g.players.length; i++) {
+        for (let j = i + 1; j < g.players.length; j++) {
+          const p1 = g.players[i];
+          const p2 = g.players[j];
+          // Figure out all pairwise matchups, win-loss is whether player finished ahead or behind of other player
+          if (p1.tieBreakScore !== p2.tieBreakScore) {
+            pairs.push([
+              p1.name.trim(),
+              p2.name.trim(),
+              p1.tieBreakScore > p2.tieBreakScore ? 0 : 1,
+            ]);
+          }
+        }
+      }
+      // console.log(pairs);
+      pairs.forEach((pair) => {
+        // first time encountering each player, set to init
+        const currRating1 = result.get(pair[0]) ?? init;
+        const currRating2 = result.get(pair[1]) ?? init;
+
+        const r1 = 10 ** (currRating1 / 400);
+        const r2 = 10 ** (currRating2 / 400);
+        const e1 = r1 / (r1 + r2);
+        const e2 = r2 / (r1 + r2);
+        const win1 = pair[2] === 0 ? 1 : 0;
+        const win2 = pair[2] === 1 ? 1 : 0;
+        // Compute deltas
+        const ratingDiff1 = adjustedK * (win1 - e1);
+        const ratingDiff2 = adjustedK * (win2 - e2);
+        //console.log(currRating1, r1, e1, win1, ratingDiff1);
+        deltas.set(pair[0], (deltas.get(pair[0]) ?? 0) + ratingDiff1);
+        deltas.set(pair[1], (deltas.get(pair[1]) ?? 0) + ratingDiff2);
+      });
+      //console.log(deltas);
+      // Add delta to each player so we can display in table rows
+      for (let i = 0; i < g.players.length; i++) {
+        g.players[i].delta = deltas.get(g.players[i].name.trim());
+        g.players[i].curr = result.get(g.players[i].name.trim()) ?? init;
+      }
+      // Update result
+      Array.from(deltas.entries()).forEach(([k, v]) => {
+        result.set(k, (result.get(k) ?? init) + v);
+      });
+      //console.log(result);
+    });
+  return result;
+}
+
 function App() {
-  const [data, setData] = useState([]);
-  const [selectedPlayers, setSelectedPlayers] = useState<
-    Record<string, boolean>
-  >({});
+  const [data, setData] = useState({
+    games: [],
+    eloRatings: new Map<string, number>(),
+  });
+  const [selectedPlayers, setSelectedPlayers] = useState(
+    new Map<string, boolean>()
+  );
   useEffect(() => {
     fetchData(setData);
   }, []);
-  console.log(selectedPlayers);
-  const filtered = data.filter((d: any) => {
-    const selectedArr = Object.keys(selectedPlayers).filter(
-      (p) => selectedPlayers[p]
-    );
-    const gPlayers = d.players.map((p2: any) => p2.name.trim());
-    return (
-      selectedArr.length === 0 || selectedArr.every((p) => gPlayers.includes(p))
-    );
-  });
+  const games = data.games;
+  const eloRatings = data.eloRatings;
+  const filtered = useMemo(() => {
+    return games.filter((d: any) => {
+      const selectedArr = Array.from(selectedPlayers.keys()).filter((p) =>
+        selectedPlayers.get(p)
+      );
+      const gPlayers = d.players.map((p2: any) => p2.name.trim());
+      return (
+        selectedArr.length === 0 ||
+        selectedArr.every((p) => gPlayers.includes(p))
+      );
+    });
+  }, [games, selectedPlayers]);
 
   const corpCounts = new Map();
   const corpWins = new Map();
@@ -150,13 +220,14 @@ function App() {
                     alignItems: "center",
                   }}
                 >
-                  <Title order={3}>{p}</Title>
+                  <Title order={3}>
+                    {p} ({eloRatings.get(p)?.toFixed(0)})
+                  </Title>
                   <Checkbox
-                    value={Boolean(selectedPlayers[p]).toString()}
+                    value={Boolean(selectedPlayers.get(p)).toString()}
                     onChange={(event: any) => {
-                      console.log(p, event.currentTarget.checked);
-                      const newSelectedPlayers = { ...selectedPlayers };
-                      newSelectedPlayers[p] = event.currentTarget.checked;
+                      const newSelectedPlayers = new Map(selectedPlayers);
+                      newSelectedPlayers.set(p, event.currentTarget.checked);
                       setSelectedPlayers(newSelectedPlayers);
                     }}
                   />
@@ -266,6 +337,9 @@ function App() {
                         </div>
                       </Table.Td>
                       {players.map((p, i) => {
+                        const target = d.players.find(
+                          (p2: any) => p2.name === p
+                        );
                         return (
                           <Table.Td
                             key={p}
@@ -276,10 +350,13 @@ function App() {
                                   : "initial",
                             }}
                           >
-                            <Text size={"xs"}>{`${
-                              d.players.find((p2: any) => p2.name === p)
-                                ?.corp ?? ""
-                            }`}</Text>
+                            {target != null && (
+                              <Text size="xs">
+                                {target?.corp ?? ""} ({target?.curr?.toFixed(0)}
+                                ) ({target?.delta > 0 ? "+" : ""}
+                                {target?.delta?.toFixed(1)})
+                              </Text>
+                            )}
                           </Table.Td>
                         );
                       })}
