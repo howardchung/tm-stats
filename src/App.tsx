@@ -306,26 +306,18 @@ function App() {
                             position: "relative",
                           }}
                         >
-                          <div
-                            style={{
-                              position: "absolute",
-                              width: "100%",
-                              margin: "0 auto",
-                              bottom: "10px",
-                            }}
-                          >
-                            ▼
-                          </div>
-                          <div
+                          {/* <div
                             style={{
                               position: "absolute",
                               width: "1px",
                               height: "100%",
-                              left: "50%",
+                              margin: "0 auto",
+                              opacity: "50%",
+                              left: "calc(50% - 1px)",
                               zIndex: 1,
                               backgroundColor: "white",
                             }}
-                          ></div>
+                          ></div> */}
                           <SplitBar
                             values={players.map(
                               (p) =>
