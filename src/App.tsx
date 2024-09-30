@@ -120,16 +120,40 @@ function App() {
   const cardCounts = new Map();
   const cardWins = new Map();
   const cardGens = new Map();
+  const milestoneCounts = new Map();
+  const milestoneWins = new Map();
+  const awardCounts = new Map();
+  const awardWins = new Map();
   const pCards = new Map<string, Map<string, number>>();
   const pCorps = new Map<string, Map<string, number>>();
+  const pMilestones = new Map<string, Map<string, number>>();
+  const pAwards = new Map<string, Map<string, number>>();
+  const pWins = new Map<string, number>();
+
   players.forEach((p) => {
     pCards.set(p, new Map());
     pCorps.set(p, new Map());
+    pMilestones.set(p, new Map());
+    pAwards.set(p, new Map());
   });
-  const pWins = new Map<string, number>();
+
   filtered.forEach((d: any) => {
     const winnerName = d.players[d.winner].name.trim();
     pWins.set(winnerName, (pWins.get(winnerName) ?? 0) + 1);
+    d.claimedMilestones.forEach((ms: any) => {
+      milestoneCounts.set(ms.name, (milestoneCounts.get(ms.name) ?? 0) + 1);
+      if (d.players.findIndex((p: any) => p.id === ms.playerId) === d.winner) {
+        milestoneWins.set(ms.name, (milestoneWins.get(ms.name) ?? 0) + 1);
+      }
+    });
+    d.fundedAwards.forEach((award: any) => {
+      awardCounts.set(award.name, (awardCounts.get(award.name) ?? 0) + 1);
+      if (
+        d.players.findIndex((p: any) => p.id === award.playerId) === d.winner
+      ) {
+        awardWins.set(award.name, (awardWins.get(award.name) ?? 0) + 1);
+      }
+    });
     d.players.forEach((p: any) => {
       corpCounts.set(p.corp, (corpCounts.get(p.corp) ?? 0) + 1);
       corpGens.set(p.corp, (corpGens.get(p.corp) ?? 0) + d.generations);
@@ -152,6 +176,22 @@ function App() {
           target.set(c, (target.get(c) ?? 0) + 1);
         }
       });
+      d.claimedMilestones.forEach((ms: any) => {
+        if (ms.playerId === p.id) {
+          const target = pMilestones.get(pName);
+          if (target) {
+            target.set(ms.name, (target.get(ms.name) ?? 0) + 1);
+          }
+        }
+      });
+      d.fundedAwards.forEach((award: any) => {
+        if (award.playerId === p.id) {
+          const target = pAwards.get(pName);
+          if (target) {
+            target.set(award.name, (target.get(award.name) ?? 0) + 1);
+          }
+        }
+      });
     });
   });
   const [gameSortKey, setGameSortKey] = useState<string>("");
@@ -159,8 +199,6 @@ function App() {
   switch (gameSortKey) {
     case "createdTimeMs":
     case "durationMs":
-    case "map":
-    case "generations":
       gameSortFn = (a: any) => a[gameSortKey];
       break;
   }
@@ -197,7 +235,14 @@ function App() {
   const sortedCards = Array.from(cardCounts.entries()).sort(
     (a, b) => cardSortFn(b) - cardSortFn(a)
   );
-  // console.log(data);
+  let milestoneSortFn = (a: any) => a[1];
+  const sortedMilestones = Array.from(milestoneCounts.entries()).sort(
+    (a, b) => milestoneSortFn(b) - milestoneSortFn(a)
+  );
+  let awardSortFn = (a: any) => a[1];
+  const sortedAwards = Array.from(awardCounts.entries()).sort(
+    (a, b) => awardSortFn(b) - awardSortFn(a)
+  );
   return (
     <MantineProvider defaultColorScheme="dark">
       <Grid>
@@ -256,7 +301,7 @@ function App() {
             </Progress.Root>
           </div>
         </Grid.Col>
-        <Grid.Col span={{ lg: 6, base: 12 }}>
+        <Grid.Col span={{ lg: 4, base: 12 }}>
           <Title>Games</Title>
           <div className="mobileScroll">
             <Table>
@@ -266,13 +311,13 @@ function App() {
                     Time
                   </Table.Th>
                   <Table.Th onClick={() => setGameSortKey("durationMs")}>
-                    Duration
+                    Info
                   </Table.Th>
-                  <Table.Th>Map</Table.Th>
+                  {/* <Table.Th>Map</Table.Th>
                   <Table.Th onClick={() => setGameSortKey("generations")}>
                     Gens
-                  </Table.Th>
-                  <Table.Th>Result</Table.Th>
+                  </Table.Th> */}
+                  {/* <Table.Th>Result</Table.Th> */}
                   {players.map((p, i) => (
                     <Table.Th key={p}>
                       <div style={{ color: colors[i] }}>{p}</div>
@@ -291,18 +336,20 @@ function App() {
                           {new Date(d.createdTimeMs).toLocaleString()}
                         </a>
                       </Table.Td>
-                      <Table.Td>{`${Math.floor(d.durationMs / 1000 / 60)}:${(
-                        Math.floor(d.durationMs / 1000) % 60
-                      )
-                        .toString()
-                        .padStart(2, "0")}`}</Table.Td>
-                      <Table.Td>{d.map}</Table.Td>
-                      <Table.Td>{d.generations}</Table.Td>
                       <Table.Td>
+                        <div>
+                          {`${Math.floor(d.durationMs / 1000 / 60)}:${(
+                            Math.floor(d.durationMs / 1000) % 60
+                          )
+                            .toString()
+                            .padStart(2, "0")}`}{" "}
+                          ({d.generations}g)
+                        </div>
+
                         <div
                           style={{
                             display: "flex",
-                            minWidth: "120px",
+                            minWidth: "80px",
                             position: "relative",
                           }}
                         >
@@ -327,7 +374,10 @@ function App() {
                             )}
                           />
                         </div>
+                        <div>{d.map}</div>
                       </Table.Td>
+                      {/* <Table.Td></Table.Td>
+                      <Table.Td></Table.Td> */}
                       {players.map((p, i) => {
                         const target = d.players.find(
                           (p2: any) => p2.name === p
@@ -359,7 +409,7 @@ function App() {
             </Table>
           </div>
         </Grid.Col>
-        <Grid.Col span={{ lg: 3, base: 12 }}>
+        <Grid.Col span={{ lg: 2, base: 12 }}>
           <Title>Corps</Title>
           <div className="mobileScroll">
             <Table>
@@ -372,9 +422,9 @@ function App() {
                   <Table.Th onClick={() => setCorpSortKey("win")}>
                     Win%
                   </Table.Th>
-                  <Table.Th onClick={() => setCorpSortKey("avggen")}>
+                  {/* <Table.Th onClick={() => setCorpSortKey("avggen")}>
                     Avg.Gens
-                  </Table.Th>
+                  </Table.Th> */}
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -391,8 +441,51 @@ function App() {
                     <Table.Td>
                       <PercentBar value={((corpWins.get(k) ?? 0) / v) * 100} />
                     </Table.Td>
-                    <Table.Td>
+                    {/* <Table.Td>
                       {((corpGens.get(k) ?? 0) / v).toFixed(2)}
+                    </Table.Td> */}
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </div>
+        </Grid.Col>
+        <Grid.Col span={{ lg: 2, base: 12 }}>
+          <Title>Milestones</Title>
+          <div className="mobileScroll">
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Name</Table.Th>
+                  <Table.Th onClick={() => setCardSortKey("played")}>
+                    Claimed
+                  </Table.Th>
+                  <Table.Th onClick={() => setCardSortKey("win")}>
+                    Win%
+                  </Table.Th>
+                  {/* <Table.Th onClick={() => setCardSortKey("avggen")}>
+                    Avg.Gens
+                  </Table.Th> */}
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {sortedMilestones.map(([k, v]) => (
+                  <Table.Tr key={k}>
+                    <Table.Td>
+                      <div>
+                        {k}
+                        <SplitBar
+                          values={players.map(
+                            (p) => pMilestones.get(p)?.get(k) ?? 0
+                          )}
+                        />
+                      </div>
+                    </Table.Td>
+                    <Table.Td>{v}</Table.Td>
+                    <Table.Td>
+                      <PercentBar
+                        value={((milestoneWins.get(k) ?? 0) / v) * 100}
+                      />
                     </Table.Td>
                   </Table.Tr>
                 ))}
@@ -400,7 +493,48 @@ function App() {
             </Table>
           </div>
         </Grid.Col>
-        <Grid.Col span={{ lg: 3, base: 12 }}>
+        <Grid.Col span={{ lg: 2, base: 12 }}>
+          <Title>Awards</Title>
+          <div className="mobileScroll">
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Name</Table.Th>
+                  <Table.Th onClick={() => setCardSortKey("played")}>
+                    Funded
+                  </Table.Th>
+                  <Table.Th onClick={() => setCardSortKey("win")}>
+                    Win%
+                  </Table.Th>
+                  {/* <Table.Th onClick={() => setCardSortKey("avggen")}>
+                    Avg.Gens
+                  </Table.Th> */}
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {sortedAwards.map(([k, v]) => (
+                  <Table.Tr key={k}>
+                    <Table.Td>
+                      <div>
+                        {k}
+                        <SplitBar
+                          values={players.map(
+                            (p) => pAwards.get(p)?.get(k) ?? 0
+                          )}
+                        />
+                      </div>
+                    </Table.Td>
+                    <Table.Td>{v}</Table.Td>
+                    <Table.Td>
+                      <PercentBar value={((awardWins.get(k) ?? 0) / v) * 100} />
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </div>
+        </Grid.Col>
+        <Grid.Col span={{ lg: 2, base: 12 }}>
           <Title>Cards</Title>
           <div className="mobileScroll">
             <Table>
@@ -413,9 +547,9 @@ function App() {
                   <Table.Th onClick={() => setCardSortKey("win")}>
                     Win%
                   </Table.Th>
-                  <Table.Th onClick={() => setCardSortKey("avggen")}>
+                  {/* <Table.Th onClick={() => setCardSortKey("avggen")}>
                     Avg.Gens
-                  </Table.Th>
+                  </Table.Th> */}
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -435,9 +569,9 @@ function App() {
                     <Table.Td>
                       <PercentBar value={((cardWins.get(k) ?? 0) / v) * 100} />
                     </Table.Td>
-                    <Table.Td>
+                    {/* <Table.Td>
                       {((cardGens.get(k) ?? 0) / v).toFixed(2)}
-                    </Table.Td>
+                    </Table.Td> */}
                   </Table.Tr>
                 ))}
               </Table.Tbody>
