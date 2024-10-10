@@ -8,6 +8,7 @@ import {
   Text,
   Grid,
   Checkbox,
+  Button,
 } from "@mantine/core";
 import "@mantine/core/styles.css";
 
@@ -48,7 +49,7 @@ function computeElo(games: any[]) {
       // Iterate over all games
       // If more than 2 players, divide k by (players - 1)
       const adjustedK = k / (g.players.length - 1);
-      // Get all pairs and resullt
+      // Get all pairs and result
       const pairs: [string, string, number][] = [];
       for (let i = 0; i < g.players.length; i++) {
         for (let j = i + 1; j < g.players.length; j++) {
@@ -144,6 +145,7 @@ function App() {
   const pMilestones = new Map<string, Map<string, number>>();
   const pAwards = new Map<string, Map<string, number>>();
   const pWins = new Map<string, number>();
+  const pGames = new Map<string, number>();
 
   players.forEach((p) => {
     pCards.set(p, new Map());
@@ -176,6 +178,7 @@ function App() {
         corpWins.set(p.corp, (corpWins.get(p.corp) ?? 0) + 1);
       }
       const pName = p.name.trim();
+      pGames.set(pName, (pGames.get(pName) ?? 0) + 1);
       const target = pCorps.get(pName);
       if (target) {
         target.set(p.corp, (target.get(p.corp) ?? 0) + 1);
@@ -280,8 +283,17 @@ function App() {
                     alignItems: "center",
                   }}
                 >
-                  <Title order={3}>
-                    {p} ({eloRatings.get(p)?.toFixed(0)})
+                  <Title order={3} c={colors[i]}>
+                    {p}
+                    {' '}
+                    <span>
+                    ({eloRatings.get(p)?.toFixed(0)})
+                    </span>
+                    <Title order={4}>
+                    ({pWins.get(p) ?? 0}
+                      {' - '}
+                      {(pGames.get(p) ?? 0) - (pWins.get(p) ?? 0)})
+                    </Title>
                   </Title>
                   <Checkbox
                     value={Boolean(selectedPlayers.get(p)).toString()}
@@ -291,30 +303,14 @@ function App() {
                       setSelectedPlayers(newSelectedPlayers);
                     }}
                   />
-                  <Title order={1} style={{ color: colors[i] }}>
-                    {pWins.get(p) ?? 0}
-                  </Title>
-                  {/* {i < players.length - 1 ? <Title order={1} style={{ margin: "0px 8px" }}>{`-`}</Title> : null} */}
+
                 </div>
               );
             })}
           </div>
-          <div>
-            <Progress.Root size={20}>
-              {players.map((p, i) => {
-                const pct = ((pWins.get(p) ?? 0) / sortedGames.length) * 100;
-                return (
-                  <Progress.Section
-                    key={p}
-                    value={((pWins.get(p) ?? 0) / sortedGames.length) * 100}
-                    color={colors[i]}
-                  >
-                    <Progress.Label>{pct.toFixed(0)}%</Progress.Label>
-                  </Progress.Section>
-                );
-              })}
-            </Progress.Root>
-          </div>
+        </Grid.Col>
+        <Grid.Col span={12}>
+          <div style={{ display: 'flex', justifyContent: 'center'}}><Button component="a" target="_blank" href="http://azure.howardchung.net:8081">Play a game</Button></div>
         </Grid.Col>
         <Grid.Col span={{ lg: 4, base: 12 }}>
           <Title>Games</Title>
@@ -328,16 +324,7 @@ function App() {
                   <Table.Th onClick={() => setGameSortKey("durationMs")}>
                     Info
                   </Table.Th>
-                  {/* <Table.Th>Map</Table.Th>
-                  <Table.Th onClick={() => setGameSortKey("generations")}>
-                    Gens
-                  </Table.Th> */}
-                  {/* <Table.Th>Result</Table.Th> */}
-                  {players.map((p, i) => (
-                    <Table.Th key={p}>
-                      <div style={{ color: colors[i] }}>{p}</div>
-                    </Table.Th>
-                  ))}
+                  <Table.Th>Result</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -348,7 +335,7 @@ function App() {
                         <a
                           href={`http://azure.howardchung.net:8081/game?id=${d.gameId}`}
                         >
-                          {new Date(d.createdTimeMs).toLocaleString()}
+                          {new Date(d.createdTimeMs).toLocaleString('en', {hour12: false, hour: '2-digit', minute: '2-digit', year: 'numeric', month: 'short', day: '2-digit', })}
                         </a>
                       </Table.Td>
                       <Table.Td>
@@ -360,63 +347,35 @@ function App() {
                             .padStart(2, "0")}`}{" "}
                           ({d.generations}g)
                         </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            minWidth: "80px",
-                            position: "relative",
-                          }}
-                        >
-                          {/* <div
-                            style={{
-                              position: "absolute",
-                              width: "1px",
-                              height: "100%",
-                              margin: "0 auto",
-                              opacity: "50%",
-                              left: "calc(50% - 1px)",
-                              zIndex: 1,
-                              backgroundColor: "white",
-                            }}
-                          ></div> */}
-                          <SplitBar
-                            values={players.map(
-                              (p) =>
-                                d.players.find(
-                                  (p2: any) => p2.name.trim() === p
-                                )?.score ?? 0
-                            )}
-                          />
-                        </div>
                         <div>{d.map}</div>
                       </Table.Td>
-                      {/* <Table.Td></Table.Td>
-                      <Table.Td></Table.Td> */}
+                      <Table.Td>
                       {players.map((p, i) => {
                         const target = d.players.find(
-                          (p2: any) => p2.name === p
+                          (p2: any) => p2.name.trim() === p
                         );
+                        const winnerScore = d.players[d.winner]?.score;
+                        if (!target) {
+                          return;
+                        }
                         return (
-                          <Table.Td
-                            key={p}
-                            style={{
-                              backgroundColor:
-                                d.players[d.winner]?.name === p
-                                  ? colors[i]
-                                  : "initial",
-                            }}
-                          >
-                            {target != null && (
-                              <Text size="xs">
-                                {target?.corp ?? ""} ({target?.curr?.toFixed(0)}
-                                ) ({target?.delta > 0 ? "+" : ""}
-                                {target?.delta?.toFixed(1)})
-                              </Text>
-                            )}
-                          </Table.Td>
+                          <div style={{ display: 'flex', gap: '2px', marginBottom: '2px' }}>
+                            <span style={{ width: '120px' }}>
+                            <Text c={colors[i]} size="xs">{target?.name} ({target?.curr?.toFixed(0)})</Text>
+                            <Text size="xs">{target?.delta > 0 ? "+" : ""}{target?.delta?.toFixed(1)}</Text>
+                            </span>
+                            <Progress.Root size={18} key={p} style={{ width: '100%'}}>
+                              <Progress.Section value={target?.score / winnerScore * 100} color={colors[i]} style={{ justifyContent: 'start'}}>
+                                <Progress.Label>
+                                  {target?.corp ?? ""}                                 
+                                </Progress.Label>
+                              </Progress.Section>
+                            <span style={{ position: 'absolute', right: '2px', color: 'white', fontWeight: 700, fontSize: 10 }}>{target?.score}</span>
+                            </Progress.Root>
+                            </div>
                         );
                       })}
+                      </Table.Td>
                     </Table.Tr>
                   );
                 })}
