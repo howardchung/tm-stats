@@ -22,8 +22,18 @@ async function fetchData(updater: (data: any) => void) {
   updater({ games: data.data, eloRatings: computeElo(data.data) });
 }
 
-const players = ["Howard", "Yvonne", "Aredy", "Sam"];
-const colors = ["red", "green", "yellow", "blue"];
+const colors = [
+  "red",
+  "green",
+  "yellow",
+  "blue",
+  "violet",
+  "orange",
+  "gray",
+  "pink",
+  "teal",
+  "lime",
+];
 
 function computeElo(games: any[]) {
   const result = new Map<string, number>();
@@ -100,6 +110,11 @@ function App() {
     fetchData(setData);
   }, []);
   const games = data.games;
+  const players = Array.from(
+    new Set(
+      games.map((g: any) => g.players.map((p: any) => p.name.trim())).flat()
+    )
+  );
   const eloRatings = data.eloRatings;
   const filtered = useMemo(() => {
     return games.filter((d: any) => {
