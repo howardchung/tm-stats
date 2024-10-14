@@ -284,14 +284,10 @@ function App() {
                   }}
                 >
                   <Title order={3} c={colors[i]}>
-                    {p}
-                    {' '}
-                    <span>
-                    ({eloRatings.get(p)?.toFixed(0)})
-                    </span>
+                    {p} <span>({eloRatings.get(p)?.toFixed(0)})</span>
                     <Title order={4}>
-                    ({pWins.get(p) ?? 0}
-                      {' - '}
+                      ({pWins.get(p) ?? 0}
+                      {" - "}
                       {(pGames.get(p) ?? 0) - (pWins.get(p) ?? 0)})
                     </Title>
                   </Title>
@@ -303,14 +299,21 @@ function App() {
                       setSelectedPlayers(newSelectedPlayers);
                     }}
                   />
-
                 </div>
               );
             })}
           </div>
         </Grid.Col>
         <Grid.Col span={12}>
-          <div style={{ display: 'flex', justifyContent: 'center'}}><Button component="a" target="_blank" href="http://azure.howardchung.net:8081">Play a game</Button></div>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Button
+              component="a"
+              target="_blank"
+              href="http://azure.howardchung.net:8081"
+            >
+              Play a game
+            </Button>
+          </div>
         </Grid.Col>
         <Grid.Col span={{ lg: 4, base: 12 }}>
           <Title>Games</Title>
@@ -335,7 +338,14 @@ function App() {
                         <a
                           href={`http://azure.howardchung.net:8081/game?id=${d.gameId}`}
                         >
-                          {new Date(d.createdTimeMs).toLocaleString('en', {hour12: false, hour: '2-digit', minute: '2-digit', year: 'numeric', month: 'short', day: '2-digit', })}
+                          {new Date(d.createdTimeMs).toLocaleString("en", {
+                            hour12: false,
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            year: "numeric",
+                            month: "short",
+                            day: "2-digit",
+                          })}
                         </a>
                       </Table.Td>
                       <Table.Td>
@@ -350,31 +360,68 @@ function App() {
                         <div>{d.map}</div>
                       </Table.Td>
                       <Table.Td>
-                      {players.map((p, i) => {
-                        const target = d.players.find(
-                          (p2: any) => p2.name.trim() === p
-                        );
-                        const winnerScore = d.players[d.winner]?.score;
-                        if (!target) {
-                          return;
-                        }
-                        return (
-                          <div style={{ display: 'flex', gap: '2px', marginBottom: '2px' }}>
-                            <span style={{ width: '120px' }}>
-                            <Text c={colors[i]} size="xs">{target?.name} ({target?.curr?.toFixed(0)})</Text>
-                            <Text size="xs">{target?.delta > 0 ? "+" : ""}{target?.delta?.toFixed(1)}</Text>
-                            </span>
-                            <Progress.Root size={18} key={p} style={{ width: '100%'}}>
-                              <Progress.Section value={target?.score / winnerScore * 100} color={colors[i]} style={{ justifyContent: 'start'}}>
-                                <Progress.Label>
-                                  {target?.corp ?? ""}                                 
-                                </Progress.Label>
-                              </Progress.Section>
-                            <span style={{ position: 'absolute', right: '2px', color: 'white', fontWeight: 700, fontSize: 10 }}>{target?.score}</span>
-                            </Progress.Root>
+                        {players.map((p, i) => {
+                          const target = d.players.find(
+                            (p2: any) => p2.name.trim() === p
+                          );
+                          const winnerScore = d.players[d.winner]?.score;
+                          if (!target) {
+                            return;
+                          }
+                          return (
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "2px",
+                                marginBottom: "2px",
+                              }}
+                            >
+                              <span style={{ width: "120px" }}>
+                                <Text
+                                  c={colors[i]}
+                                  size="xs"
+                                  fw={
+                                    d.players[d.winner]?.id === target?.id
+                                      ? 700
+                                      : 400
+                                  }
+                                >
+                                  {target?.name} ({target?.curr?.toFixed(0)})
+                                </Text>
+                                <Text size="xs">
+                                  {target?.delta > 0 ? "+" : ""}
+                                  {target?.delta?.toFixed(1)}
+                                </Text>
+                              </span>
+                              <Progress.Root
+                                size={18}
+                                key={p}
+                                style={{ width: "100%" }}
+                              >
+                                <Progress.Section
+                                  value={(target?.score / winnerScore) * 100}
+                                  color={colors[i]}
+                                  style={{ justifyContent: "start" }}
+                                >
+                                  <Progress.Label>
+                                    {target?.corp ?? ""}
+                                  </Progress.Label>
+                                </Progress.Section>
+                                <span
+                                  style={{
+                                    position: "absolute",
+                                    right: "2px",
+                                    color: "white",
+                                    fontWeight: 700,
+                                    fontSize: 10,
+                                  }}
+                                >
+                                  {target?.score}
+                                </span>
+                              </Progress.Root>
                             </div>
-                        );
-                      })}
+                          );
+                        })}
                       </Table.Td>
                     </Table.Tr>
                   );
