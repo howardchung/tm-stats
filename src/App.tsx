@@ -51,6 +51,8 @@ const colors = [
 
 function computeElo(games: any[]) {
   console.time("elo");
+  // Reverse to get games in order for rating
+  games.reverse();
   const result = new Map<string, number>();
   const init = 1000;
   // each match can update by up to k
@@ -110,7 +112,7 @@ function computeElo(games: any[]) {
       //console.log(result);
     });
   console.timeEnd("elo");
-  return result;
+  return { eloRatings: result, games: games.reverse() };
 }
 
 function App() {
@@ -125,13 +127,11 @@ function App() {
   useEffect(() => {
     fetchData(setData);
   }, []);
-  let games = inPersonOnly
+  let gamesToRate = inPersonOnly
     ? data.games.filter((g: any) => !g.gameId)
     : data.games;
-  // Reverse to get games in order for rating
-  games = games.reverse();
   // This function also modifies the games array with elo delta data
-  const eloRatings = computeElo(games);
+  const { eloRatings, games } = computeElo(gamesToRate.slice());
   const playerColors = new Map();
   const players: string[] = Array.from(
     new Set(
