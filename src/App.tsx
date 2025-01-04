@@ -283,9 +283,9 @@ function App() {
           Play a game
         </Button>
       </div>
-      <Grid>
-        <Grid.Col span={{ lg: 2, base: 12 }}>
-          <Title>Players</Title>
+      <Grid columns={24}>
+        <Grid.Col span={{ lg: 4, base: 24 }}>
+          <Title order={3}>Players</Title>
           <div
             style={{
               display: "flex",
@@ -324,17 +324,21 @@ function App() {
                             }}
                           />
                         </Table.Td>
-                        <Table.Td style={{ whiteSpace: "nowrap" }}>
-                          <Title order={4} c={playerColors.get(p)}>
+                        <Table.Td>
+                          <Title order={5} c={playerColors.get(p)}>
                             {p}{" "}
-                            <span>
-                              ({pWins.get(p) ?? 0}
-                              {" - "}
-                              {(pGames.get(p) ?? 0) - (pWins.get(p) ?? 0)})
-                            </span>
+                          </Title>
+                          <div>
+                            ({pWins.get(p) ?? 0}
+                            {" - "}
+                            {(pGames.get(p) ?? 0) - (pWins.get(p) ?? 0)})
+                          </div>
+                        </Table.Td>
+                        <Table.Td>
+                          <Title order={6} c={playerColors.get(p)}>
+                            {eloRatings.get(p)?.toFixed(0)}
                           </Title>
                         </Table.Td>
-                        <Table.Td>{eloRatings.get(p)?.toFixed(0)}</Table.Td>
                       </Table.Tr>
                     );
                   })}
@@ -342,16 +346,13 @@ function App() {
             </Table>
           </div>
         </Grid.Col>
-        <Grid.Col span={{ lg: 4, base: 12 }}>
-          <Title>Games</Title>
+        <Grid.Col span={{ lg: 8, base: 24 }}>
+          <Title order={3}>Games</Title>
           <div className="mobileScroll">
             <Table>
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th onClick={() => setGameSortKey("createdTimeMs")}>
-                    Time
-                  </Table.Th>
-                  <Table.Th onClick={() => setGameSortKey("durationMs")}>
                     Info
                   </Table.Th>
                   <Table.Th>Result</Table.Th>
@@ -362,29 +363,29 @@ function App() {
                   return (
                     <Table.Tr key={d.createdTimeMs}>
                       <Table.Td>
-                        <a
-                          href={`http://azure.howardchung.net:8081/game?id=${d.gameId}`}
-                        >
-                          {new Date(d.createdTimeMs).toLocaleString("en", {
-                            hour12: false,
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            year: "numeric",
-                            month: "short",
-                            day: "2-digit",
-                          })}
-                        </a>
-                      </Table.Td>
-                      <Table.Td>
                         <div>
-                          {`${Math.floor(d.durationMs / 1000 / 60)}:${(
-                            Math.floor(d.durationMs / 1000) % 60
-                          )
-                            .toString()
-                            .padStart(2, "0")}`}{" "}
-                          ({d.generations}g)
+                          <a
+                            href={`http://azure.howardchung.net:8081/game?id=${d.gameId}`}
+                          >
+                            {new Date(d.createdTimeMs).toLocaleString("en", {
+                              hour12: false,
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              year: "numeric",
+                              month: "short",
+                              day: "2-digit",
+                            })}
+                          </a>
+                          <div>
+                            {`${Math.floor(d.durationMs / 1000 / 60)}:${(
+                              Math.floor(d.durationMs / 1000) % 60
+                            )
+                              .toString()
+                              .padStart(2, "0")}`}{" "}
+                            ({d.generations}g)
+                          </div>
+                          <div>{d.map}</div>
                         </div>
-                        <div>{d.map}</div>
                       </Table.Td>
                       <Table.Td>
                         {d.players.map((target: any, i: number) => {
@@ -450,8 +451,8 @@ function App() {
             </Table>
           </div>
         </Grid.Col>
-        <Grid.Col span={{ lg: 2, base: 12 }}>
-          <Title>Corps</Title>
+        <Grid.Col span={{ lg: 6, base: 24 }}>
+          <Title order={3}>Corps</Title>
           <div className="mobileScroll">
             <Table>
               <Table.Thead>
@@ -494,9 +495,7 @@ function App() {
               </Table.Tbody>
             </Table>
           </div>
-        </Grid.Col>
-        <Grid.Col span={{ lg: 2, base: 12 }}>
-          <Title>Milestones</Title>
+          <Title order={3}>Milestones</Title>
           <div className="mobileScroll">
             <Table>
               <Table.Thead>
@@ -539,9 +538,7 @@ function App() {
               </Table.Tbody>
             </Table>
           </div>
-        </Grid.Col>
-        <Grid.Col span={{ lg: 2, base: 12 }}>
-          <Title>Awards</Title>
+          <Title order={3}>Awards</Title>
           <div className="mobileScroll">
             <Table>
               <Table.Thead>
@@ -583,8 +580,8 @@ function App() {
             </Table>
           </div>
         </Grid.Col>
-        <Grid.Col span={{ lg: 2, base: 12 }}>
-          <Title>Cards</Title>
+        <Grid.Col span={{ lg: 6, base: 24 }}>
+          <Title order={3}>Cards</Title>
           <div className="mobileScroll">
             <Table>
               <Table.Thead>
@@ -629,7 +626,6 @@ function App() {
             </Table>
           </div>
         </Grid.Col>
-        {/* <pre>{JSON.stringify(data)}</pre> */}
       </Grid>
     </MantineProvider>
   );
