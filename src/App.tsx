@@ -20,20 +20,33 @@ async function fetchData(updater: (data: any) => void) {
     "https://marsstats.netlify.app/.netlify/functions/stats"
   );
   const data = await resp.json();
-  updater({ games: data.data, eloRatings: computeElo(data.data) });
+  updater({ games: data.data });
 }
 
+// 20 colors from https://sashamaps.net/docs/resources/20-colors/
 const colors = [
-  "green",
-  "red",
-  "yellow",
-  "blue",
-  "orange",
-  "violet",
-  "gray",
-  "pink",
-  "teal",
-  "lime",
+  "#3cb44b",
+  "#e6194B",
+  "#ffe119",
+  "#4363d8",
+  "#f58231",
+  "#911eb4",
+  "#42d4f4",
+  "#f032e6",
+  "#bfef45",
+  "#fabed4",
+  "#469990",
+  "#dcbeff",
+  "#9A6324",
+  "#fffac8",
+  "#800000",
+  "#aaffc3",
+  "#808000",
+  "#ffd8b1",
+  "#000075",
+  "#a9a9a9",
+  "#ffffff",
+  "#000000",
 ];
 
 function computeElo(games: any[]) {
@@ -43,7 +56,6 @@ function computeElo(games: any[]) {
   // each match can update by up to k
   const k = 32;
   games
-    .reverse()
     //.slice(0, 2)
     .forEach((g) => {
       const deltas = new Map<string, number>();
@@ -109,23 +121,28 @@ function App() {
   const [selectedPlayers, setSelectedPlayers] = useState(
     new Map<string, boolean>()
   );
+  const [inPersonOnly, setInPersonOnly] = useState(false);
   useEffect(() => {
     fetchData(setData);
   }, []);
-  const games = data.games;
+  let games = inPersonOnly
+    ? data.games.filter((g: any) => !g.gameId)
+    : data.games;
+  // Reverse to get games in order for rating
+  games = games.reverse();
+  // This function also modifies the games array with elo delta data
+  const eloRatings = computeElo(games);
   const playerColors = new Map();
   const players: string[] = Array.from(
     new Set(
       games.map((g: any) => g.players.map((p: any) => p.name.trim())).flat()
     )
   );
+  // Assign colors based on the original order
   players.forEach((p, i) => {
     playerColors.set(p, colors[i]);
   });
-  // Assign colors based on the original order
-  // In each game, we should render in player order
-  // In the Elo list, render in elo order
-  const eloRatings = data.eloRatings;
+  // UI allows showing only matches played by a particular player
   const filtered = useMemo(() => {
     return games.filter((d: any) => {
       const selectedArr = Array.from(selectedPlayers.keys()).filter((p) =>
@@ -274,7 +291,14 @@ function App() {
   );
   return (
     <MantineProvider defaultColorScheme="dark">
-      <div style={{ display: "flex", justifyContent: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          flexDirection: "column",
+          gap: "4px",
+        }}
+      >
         <Button
           component="a"
           target="_blank"
@@ -282,6 +306,11 @@ function App() {
         >
           Play a game
         </Button>
+        <Checkbox
+          checked={inPersonOnly}
+          onChange={(event) => setInPersonOnly(event.currentTarget.checked)}
+          label="Show in-person only"
+        />
       </div>
       <Grid columns={24}>
         <Grid.Col span={{ lg: 4, base: 24 }}>
