@@ -15,11 +15,13 @@ import "@mantine/core/styles.css";
 import "./App.css";
 
 async function fetchData(updater: (data: any) => void) {
+  console.time("network");
   // netlify functions proxies the original http data to https
   const resp = await fetch(
     "https://marsstats.netlify.app/.netlify/functions/stats"
   );
   const data = await resp.json();
+  console.timeEnd("network");
   updater({ games: data.data, eloRatings: computeElo(data.data) });
 }
 
@@ -37,6 +39,7 @@ const colors = [
 ];
 
 function computeElo(games: any[]) {
+  console.time("elo");
   const result = new Map<string, number>();
   const init = 1000;
   // each match can update by up to k
@@ -96,6 +99,7 @@ function computeElo(games: any[]) {
       });
       //console.log(result);
     });
+  console.timeEnd("elo");
   return result;
 }
 
@@ -130,6 +134,7 @@ function App() {
     });
   }, [games, selectedPlayers]);
 
+  console.time("count");
   const corpCounts = new Map();
   const corpWins = new Map();
   const corpGens = new Map();
@@ -212,6 +217,7 @@ function App() {
       });
     });
   });
+  console.timeEnd("count");
   const [gameSortKey, setGameSortKey] = useState<string>("");
   let gameSortFn = (a: any) => a["createdTimeMs"];
   switch (gameSortKey) {
