@@ -274,60 +274,72 @@ function App() {
   );
   return (
     <MantineProvider defaultColorScheme="dark">
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <Button
+          component="a"
+          target="_blank"
+          href="http://azure.howardchung.net:8081"
+        >
+          Play a game
+        </Button>
+      </div>
       <Grid>
-        <Grid.Col span={12}>
+        <Grid.Col span={{ lg: 2, base: 12 }}>
+          <Title>Players</Title>
           <div
             style={{
               display: "flex",
-              fontSize: 24,
-              fontWeight: 700,
-              justifyContent: "space-between",
+              flexDirection: "column",
             }}
           >
-            {players
-              .sort(
-                (a, b) => (eloRatings.get(b) ?? 0) - (eloRatings.get(a) ?? 0)
-              )
-              .map((p) => {
-                return (
-                  <div
-                    key={p}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Title order={3} c={playerColors.get(p)}>
-                      {p} <span>({eloRatings.get(p)?.toFixed(0)})</span>
-                      <Title order={4}>
-                        ({pWins.get(p) ?? 0}
-                        {" - "}
-                        {(pGames.get(p) ?? 0) - (pWins.get(p) ?? 0)})
-                      </Title>
-                    </Title>
-                    <Checkbox
-                      value={Boolean(selectedPlayers.get(p)).toString()}
-                      onChange={(event: any) => {
-                        const newSelectedPlayers = new Map(selectedPlayers);
-                        newSelectedPlayers.set(p, event.currentTarget.checked);
-                        setSelectedPlayers(newSelectedPlayers);
-                      }}
-                    />
-                  </div>
-                );
-              })}
-          </div>
-        </Grid.Col>
-        <Grid.Col span={12}>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <Button
-              component="a"
-              target="_blank"
-              href="http://azure.howardchung.net:8081"
-            >
-              Play a game
-            </Button>
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th></Table.Th>
+                  <Table.Th>Player</Table.Th>
+                  <Table.Th>Elo</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {players
+                  .sort(
+                    (a, b) =>
+                      (eloRatings.get(b) ?? 0) - (eloRatings.get(a) ?? 0)
+                  )
+                  .map((p) => {
+                    return (
+                      <Table.Tr key={p}>
+                        <Table.Td>
+                          <Checkbox
+                            value={Boolean(selectedPlayers.get(p)).toString()}
+                            onChange={(event: any) => {
+                              const newSelectedPlayers = new Map(
+                                selectedPlayers
+                              );
+                              newSelectedPlayers.set(
+                                p,
+                                event.currentTarget.checked
+                              );
+                              setSelectedPlayers(newSelectedPlayers);
+                            }}
+                          />
+                        </Table.Td>
+                        <Table.Td style={{ whiteSpace: "nowrap" }}>
+                          <Title order={4} c={playerColors.get(p)}>
+                            {p}{" "}
+                            <span>
+                              ({pWins.get(p) ?? 0}
+                              {" - "}
+                              {(pGames.get(p) ?? 0) - (pWins.get(p) ?? 0)})
+                            </span>
+                          </Title>
+                        </Table.Td>
+                        <Table.Td>{eloRatings.get(p)?.toFixed(0)}</Table.Td>
+                      </Table.Tr>
+                    );
+                  })}
+              </Table.Tbody>
+            </Table>
           </div>
         </Grid.Col>
         <Grid.Col span={{ lg: 4, base: 12 }}>
@@ -392,11 +404,7 @@ function App() {
                                 <Text
                                   c={playerColors.get(trackedP)}
                                   size="xs"
-                                  fw={
-                                     d.winner === i
-                                      ? 700
-                                      : 400
-                                  }
+                                  fw={d.winner === i ? 700 : 400}
                                 >
                                   {target?.name} ({target?.curr?.toFixed(0)})
                                 </Text>
