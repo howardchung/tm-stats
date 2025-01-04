@@ -15,13 +15,11 @@ import "@mantine/core/styles.css";
 import "./App.css";
 
 async function fetchData(updater: (data: any) => void) {
-  console.time("network");
   // netlify functions proxies the original http data to https
   const resp = await fetch(
     "https://marsstats.netlify.app/.netlify/functions/stats"
   );
   const data = await resp.json();
-  console.timeEnd("network");
   updater({ games: data.data, eloRatings: computeElo(data.data) });
 }
 
@@ -115,11 +113,18 @@ function App() {
     fetchData(setData);
   }, []);
   const games = data.games;
-  const players = Array.from(
+  const playerColors = new Map();
+  const players: string[] = Array.from(
     new Set(
       games.map((g: any) => g.players.map((p: any) => p.name.trim())).flat()
     )
   );
+  players.forEach((p, i) => {
+    playerColors.set(p, colors[i]);
+  });
+  // Assign colors based on the original order
+  // In each game, we should render in player order
+  // In the Elo list, render in elo order
   const eloRatings = data.eloRatings;
   const filtered = useMemo(() => {
     return games.filter((d: any) => {
@@ -134,7 +139,6 @@ function App() {
     });
   }, [games, selectedPlayers]);
 
-  console.time("count");
   const corpCounts = new Map();
   const corpWins = new Map();
   const corpGens = new Map();
@@ -217,7 +221,6 @@ function App() {
       });
     });
   });
-  console.timeEnd("count");
   const [gameSortKey, setGameSortKey] = useState<string>("");
   let gameSortFn = (a: any) => a["createdTimeMs"];
   switch (gameSortKey) {
@@ -279,35 +282,39 @@ function App() {
               justifyContent: "space-between",
             }}
           >
-            {players.map((p, i) => {
-              return (
-                <div
-                  key={p}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                  }}
-                >
-                  <Title order={3} c={colors[i]}>
-                    {p} <span>({eloRatings.get(p)?.toFixed(0)})</span>
-                    <Title order={4}>
-                      ({pWins.get(p) ?? 0}
-                      {" - "}
-                      {(pGames.get(p) ?? 0) - (pWins.get(p) ?? 0)})
-                    </Title>
-                  </Title>
-                  <Checkbox
-                    value={Boolean(selectedPlayers.get(p)).toString()}
-                    onChange={(event: any) => {
-                      const newSelectedPlayers = new Map(selectedPlayers);
-                      newSelectedPlayers.set(p, event.currentTarget.checked);
-                      setSelectedPlayers(newSelectedPlayers);
+            {players
+              .sort(
+                (a, b) => (eloRatings.get(b) ?? 0) - (eloRatings.get(a) ?? 0)
+              )
+              .map((p) => {
+                return (
+                  <div
+                    key={p}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
                     }}
-                  />
-                </div>
-              );
-            })}
+                  >
+                    <Title order={3} c={playerColors.get(p)}>
+                      {p} <span>({eloRatings.get(p)?.toFixed(0)})</span>
+                      <Title order={4}>
+                        ({pWins.get(p) ?? 0}
+                        {" - "}
+                        {(pGames.get(p) ?? 0) - (pWins.get(p) ?? 0)})
+                      </Title>
+                    </Title>
+                    <Checkbox
+                      value={Boolean(selectedPlayers.get(p)).toString()}
+                      onChange={(event: any) => {
+                        const newSelectedPlayers = new Map(selectedPlayers);
+                        newSelectedPlayers.set(p, event.currentTarget.checked);
+                        setSelectedPlayers(newSelectedPlayers);
+                      }}
+                    />
+                  </div>
+                );
+              })}
           </div>
         </Grid.Col>
         <Grid.Col span={12}>
@@ -366,14 +373,11 @@ function App() {
                         <div>{d.map}</div>
                       </Table.Td>
                       <Table.Td>
-                        {players.map((p, i) => {
-                          const target = d.players.find(
-                            (p2: any) => p2.name.trim() === p
+                        {d.players.map((target: any, i: number) => {
+                          const trackedP = players.find(
+                            (p2: string) => p2 === target.name?.trim()
                           );
                           const winnerScore = d.players[d.winner]?.score;
-                          if (!target) {
-                            return;
-                          }
                           return (
                             <div
                               style={{
@@ -384,7 +388,7 @@ function App() {
                             >
                               <span style={{ width: "120px" }}>
                                 <Text
-                                  c={colors[i]}
+                                  c={playerColors.get(trackedP)}
                                   size="xs"
                                   fw={
                                     d.players[d.winner]?.id === target?.id
@@ -401,12 +405,12 @@ function App() {
                               </span>
                               <Progress.Root
                                 size={18}
-                                key={p}
+                                key={trackedP}
                                 style={{ width: "100%" }}
                               >
                                 <Progress.Section
                                   value={(target?.score / winnerScore) * 100}
-                                  color={colors[i]}
+                                  color={playerColors.get(trackedP)}
                                   style={{ justifyContent: "start" }}
                                 >
                                   <Progress.Label>
@@ -461,7 +465,11 @@ function App() {
                       {" "}
                       {k}
                       <SplitBar
-                        values={players.map((p) => pCorps.get(p)?.get(k) ?? 0)}
+                        values={players.map((p) => ({
+                          label: p,
+                          value: pCorps.get(p)?.get(k) ?? 0,
+                        }))}
+                        playerColors={playerColors}
                       />
                     </Table.Td>
                     <Table.Td>{v}</Table.Td>
@@ -502,9 +510,11 @@ function App() {
                       <div>
                         {k}
                         <SplitBar
-                          values={players.map(
-                            (p) => pMilestones.get(p)?.get(k) ?? 0
-                          )}
+                          values={players.map((p) => ({
+                            label: p,
+                            value: pMilestones.get(p)?.get(k) ?? 0,
+                          }))}
+                          playerColors={playerColors}
                         />
                       </div>
                     </Table.Td>
@@ -545,9 +555,11 @@ function App() {
                       <div>
                         {k}
                         <SplitBar
-                          values={players.map(
-                            (p) => pAwards.get(p)?.get(k) ?? 0
-                          )}
+                          values={players.map((p) => ({
+                            label: p,
+                            value: pAwards.get(p)?.get(k) ?? 0,
+                          }))}
+                          playerColors={playerColors}
                         />
                       </div>
                     </Table.Td>
@@ -586,9 +598,11 @@ function App() {
                       <div>
                         {k}
                         <SplitBar
-                          values={players.map(
-                            (p) => pCards.get(p)?.get(k) ?? 0
-                          )}
+                          values={players.map((p) => ({
+                            label: p,
+                            value: pCards.get(p)?.get(k) ?? 0,
+                          }))}
+                          playerColors={playerColors}
                         />
                       </div>
                     </Table.Td>
@@ -626,8 +640,14 @@ function PercentBar({ value }: { value: number }) {
   );
 }
 
-function SplitBar({ values }: { values: number[] }) {
-  const sum = values.reduce((a, b) => a + b, 0);
+function SplitBar({
+  values,
+  playerColors,
+}: {
+  values: { label: string; value: number }[];
+  playerColors: Map<string, string>;
+}) {
+  const sum = values.map((v) => v.value).reduce((a, b) => a + b, 0);
   return (
     <div style={{ width: "100%" }}>
       <Progress.Root size={14} classNames={{ label: "label" }}>
@@ -636,8 +656,13 @@ function SplitBar({ values }: { values: number[] }) {
             return null;
           }
           return (
-            <Progress.Section key={i} value={(v / sum) * 100} color={colors[i]}>
-              <Progress.Label>{v}</Progress.Label>
+            <Progress.Section
+              key={i}
+              value={(v.value / sum) * 100}
+              color={playerColors.get(v.label)}
+              title={v.label}
+            >
+              <Progress.Label>{v.value}</Progress.Label>
             </Progress.Section>
           );
         })}
