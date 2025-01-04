@@ -373,7 +373,7 @@ function App() {
                         <div>{d.map}</div>
                       </Table.Td>
                       <Table.Td>
-                        {d.players.map((target: any, i: number) => {
+                        {d.players.map((target: any) => {
                           const trackedP = players.find(
                             (p2: string) => p2 === target.name?.trim()
                           );
