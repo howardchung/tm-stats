@@ -24,12 +24,12 @@ async function fetchData(updater: (data: any) => void) {
 }
 
 const colors = [
-  "red",
   "green",
+  "red",
   "yellow",
   "blue",
-  "violet",
   "orange",
+  "violet",
   "gray",
   "pink",
   "teal",
