@@ -373,7 +373,7 @@ function App() {
                         <div>{d.map}</div>
                       </Table.Td>
                       <Table.Td>
-                        {d.players.map((target: any) => {
+                        {d.players.map((target: any, i: number) => {
                           const trackedP = players.find(
                             (p2: string) => p2 === target.name?.trim()
                           );
@@ -391,7 +391,7 @@ function App() {
                                   c={playerColors.get(trackedP)}
                                   size="xs"
                                   fw={
-                                    d.players[d.winner]?.id === target?.id
+                                     d.winner === i
                                       ? 700
                                       : 400
                                   }
