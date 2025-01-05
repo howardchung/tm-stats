@@ -181,10 +181,12 @@ function App() {
       }
     });
     d.players.forEach((p: any) => {
-      corpCounts.set(p.corp, (corpCounts.get(p.corp) ?? 0) + 1);
-      corpGens.set(p.corp, (corpGens.get(p.corp) ?? 0) + d.generations);
-      if (p.id === d.players[d.winner].id) {
-        corpWins.set(p.corp, (corpWins.get(p.corp) ?? 0) + 1);
+      if (p.corp) {
+        corpCounts.set(p.corp, (corpCounts.get(p.corp) ?? 0) + 1);
+        corpGens.set(p.corp, (corpGens.get(p.corp) ?? 0) + d.generations);
+        if (p.id === d.players[d.winner].id) {
+          corpWins.set(p.corp, (corpWins.get(p.corp) ?? 0) + 1);
+        }
       }
       const pName = p.name.trim();
       pGames.set(pName, (pGames.get(pName) ?? 0) + 1);
