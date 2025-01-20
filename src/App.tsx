@@ -127,21 +127,28 @@ function App() {
   useEffect(() => {
     fetchData(setData);
   }, []);
-  let gamesToRate = inPersonOnly
-    ? data.games.filter((g: any) => !g.gameId)
-    : data.games;
-  // This function also modifies the games array with elo delta data
-  const { eloRatings, games } = computeElo(gamesToRate.slice());
+  // Assign players based on reverse game order
   const playerColors = new Map();
   const players: string[] = Array.from(
     new Set(
-      games.map((g: any) => g.players.map((p: any) => p.name.trim())).flat()
+      data.games
+        .slice()
+        .reverse()
+        .map((g: any) => g.players.map((p: any) => p.name.trim()))
+        .flat()
     )
   );
   // Assign colors based on the original order
   players.forEach((p, i) => {
     playerColors.set(p, colors[i]);
   });
+
+  let gamesToRate = inPersonOnly
+    ? data.games.filter((g: any) => !g.gameId)
+    : data.games;
+  // This function also modifies the games array with elo delta data
+  const { eloRatings, games } = computeElo(gamesToRate.slice());
+
   // UI allows showing only matches played by a particular player
   const filtered = useMemo(() => {
     return games.filter((d: any) => {
