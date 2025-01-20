@@ -25,8 +25,8 @@ async function fetchData(updater: (data: any) => void) {
 
 // 20 colors from https://sashamaps.net/docs/resources/20-colors/
 const colors = [
-  "#e6194B",
   "#3cb44b",
+  "#e6194B",
   "#ffe119",
   "#4363d8",
   "#f58231",
