@@ -17,7 +17,8 @@ import "./App.css";
 async function fetchData(updater: (data: any) => void) {
   // netlify functions proxies the original http data to https
   const resp = await fetch(
-    "https://marsstats.netlify.app/.netlify/functions/stats"
+    // "https://marsstats.netlify.app/.netlify/functions/stats"
+    "https://mars.howardchung.net/api/statspage",
   );
   const data = await resp.json();
   updater({ games: data.data });
@@ -309,7 +310,7 @@ function App() {
         <Button
           component="a"
           target="_blank"
-          href="http://azure.howardchung.net:8081"
+          href="https://mars.howardchung.net"
         >
           Play a game
         </Button>
@@ -401,7 +402,7 @@ function App() {
                       <Table.Td>
                         <div>
                           <a
-                            href={`http://azure.howardchung.net:8081/game?id=${d.gameId}`}
+                            href={`https://mars.howardchung.net/game?id=${d.gameId}`}
                           >
                             {new Date(d.createdTimeMs).toLocaleString("en", {
                               hour12: false,
